@@ -1,8 +1,8 @@
-# SRE Concepts & Class Enrollment Application
+# SRE Concepts & Bharat Mart Application
 
 Welcome! This documentation contains:
 
-- A full-stack **Class Enrollment Application**
+- A full-stack **Bharat Mart Application**
 - A complete **5-Day SRE Training Program**
 - Hands-on labs for every module
 - Detailed conceptual notes
