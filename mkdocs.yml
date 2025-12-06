@@ -1,5 +1,5 @@
-site_name: SRE Concepts
-site_description: "SRE Concepts Knowledge Base"
+site_name: SRE with Oracle Cloud Infrastructure
+site_description: "SRE with Oracle Cloud Infrastructure Knowledge Base"
 site_url: https://your-site-url.com      # ⬅️ Optional but recommended for sitemap/canonical URLs
 
 theme:
