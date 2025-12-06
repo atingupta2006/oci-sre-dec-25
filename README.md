@@ -1,15 +1,11 @@
-# SRE MkDocs Project (Improved)
-
-This MkDocs site was generated from your uploaded SRE materials and improved with:
-- Clean navigation (Day 1..Day 4)
-- Material theme (blue)
-- GitHub Actions workflow for automatic deployment to GitHub Pages
+# SRE MkDocs Project
 
 ## Local preview
 
 ```bash
-pip install mkdocs-material
-mkdocs serve
+cd "<project-dir>"
+source ../venv/Scripts/activate
+python -m mkdocs serve
 # open http://127.0.0.1:8000
 ```
 

@@ -51,10 +51,10 @@ A complete directory of all content in this training program.
 
 ---
 
-## 🧩 Application: Class Enrollment App
+## 🧩 Application: Bhart Mart
 
 ### **Backend + Frontend Application Documentation**
-- [Overview](app/class-enrollment/index.md)
+- Overview
 - Setup & Installation
 - Backend API  
 - Frontend Client  

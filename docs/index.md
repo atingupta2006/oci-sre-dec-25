@@ -13,11 +13,11 @@ Use the left navigation panel or the direct links below.
 
 ## 📘 Application Documentation
 
-### **Class Enrollment App**
-This folder contains the backend, frontend, setup, run scripts, and configuration.
+### **Bharat Mart App**
+Contains the backend, frontend, setup, run scripts, and configuration.
 
 ➡️ **Open Application Docs:**  
-[app/class-enrollment](app/class-enrollment/index.md)
+[Bharat Marp app](https://github.com/atingupta2006/oci-multi-tier-web-app-ecommerce)
 
 ---
 
