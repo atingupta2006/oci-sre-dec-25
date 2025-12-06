@@ -55,7 +55,7 @@ A complete directory of all content in this training program.
 
 ### **Backend + Frontend Application Documentation**
 - [Overview](app/class-enrollment/index.md)
-- Setup & Installation  
+- Setup & Installation
 - Backend API  
 - Frontend Client  
 - Configuration  

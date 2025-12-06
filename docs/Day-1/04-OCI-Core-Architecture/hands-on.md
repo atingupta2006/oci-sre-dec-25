@@ -1,11 +1,13 @@
 
-## Hands-on Lab
 
-## Hands-On Exercise: Working with OCI Core Services (Instructor-Optimized Version)
+
+## Working with OCI Core Services 
 
 ## 1. Task 1: Create a VCN and Subnet
 
-## **Purpose:** Build the foundational network where all OCI resources will live.
+#### Purpose
+
+Build the foundational network where all OCI resources will live.
 
 A Virtual Cloud Network (VCN) is similar to a private data center inside OCI. Every compute instance, database, and service you create needs to live inside a VCN.
 
@@ -45,7 +47,9 @@ This gives you a usable network without manual configuration.
 
 ## 2. Task 2: Launch a Compute Instance
 
-## **Purpose:** Deploy a virtual machine inside your VCN.
+#### Purpose
+
+Deploy a virtual machine inside your VCN.
 
 Compute is where applications, tools, and workloads actually run.
 
@@ -90,7 +94,9 @@ This sets the stage for SSH access and reliability testing.
 
 ## 3. Task 3: Use Cloud Shell to SSH into the Instance
 
-## **Purpose:** Verify instance connectivity and confirm your network setup works.
+#### Purpose
+
+Verify instance connectivity and confirm your network setup works.
 
 SSH access is a basic test SREs perform when diagnosing compute/network problems.
 
@@ -128,7 +134,9 @@ All of these are foundational reliability checks.
 
 ## 4. Task 4: Create an IAM Group and Policy
 
-## **Purpose:** Learn how access is controlled in OCI.
+#### Purpose
+
+Learn how access is controlled in OCI.
 
 SREs often help define least-privilege IAM policies for teams.
 

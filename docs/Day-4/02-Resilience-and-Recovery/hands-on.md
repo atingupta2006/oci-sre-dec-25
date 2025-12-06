@@ -1,7 +1,7 @@
 
 # Hands-on Lab
 
-## **Student-Friendly Document with Complete Solution Key**
+#### Student-Friendly Document with Complete Solution Key
 
 This hands-on activity focuses on two core resilience practices:
 
@@ -11,9 +11,9 @@ This hands-on activity focuses on two core resilience practices:
 These skills are foundational for building secure, fault‑tolerant, and recoverable systems.
 
 
-## **1. Background Concepts (Short & Practical)**
+#### 1. Background Concepts (Short & Practical)
 
-## **1.1 Backups & Snapshots (Why They Matter)**
+#### 1.1 Backups & Snapshots (Why They Matter)
 
 Although not used directly in this lab, understanding them is essential:
 
@@ -27,7 +27,7 @@ SREs use them for:
 * Protection against corruption & accidental deletion
 
 
-## **1.2 Secret Rotation & Secure Configs**
+#### 1.2 Secret Rotation & Secure Configs
 
 Hard‑coding secrets (DB passwords, API keys) is dangerous.
 Secrets must be:
@@ -40,14 +40,15 @@ Secrets must be:
 This lab walks you through securely storing and retrieving secrets.
 
 
-## **2. Hands-On Task 1 — Store Secrets in OCI Vault**
+## 2. Hands-On Task 1 — Store Secrets in OCI Vault
 
-## **Purpose:** Store an application DB password or API key securely.
+#### Purpose
 
+Store an application DB password or API key securely.
 
-## **Steps:**
+#### Steps
 
-### **A. Create a Vault**
+#### A. Create a Vault
 
 1. Open **Navigation Menu (☰) → Identity & Security → Vault**.
 2. Click **Create Vault**.
@@ -59,7 +60,7 @@ This lab walks you through securely storing and retrieving secrets.
 4. Click **Create Vault**.
 
 
-### **B. Create a Master Key**
+#### B. Create a Master Key
 
 1. Inside your vault, open **Master Encryption Keys**.
 2. Click **Create Key**.
@@ -70,14 +71,14 @@ This lab walks you through securely storing and retrieving secrets.
 4. Click **Create Key**.
 
 
-### **C. Create the Secret**
+#### C. Create the Secret
 
 1. Inside the Vault, open **Secrets**.
 2. Click **Create Secret**.
 3. Enter:
 
    * **Name:** `<student-id>-db-password`
-   * **Description:** "DB password for Class Enrollment App"
+   * **Description:** "DB password for BharatMart e-commerce platform"
    * **Encryption Key:** `<student-id>-masterkey`
 4. Under **Secret Contents**, enter a test value such as:
 
@@ -87,19 +88,19 @@ This lab walks you through securely storing and retrieving secrets.
 5. Click **Create Secret**.
 
 
-## **Expected Result:**
+#### Expected Result
 
 A new secret created in the Vault with encrypted storage.
 
+## 3. Hands-On Task 2 — Retrieve a Secret from a Compute Instance
 
-## **3. Hands-On Task 2 — Retrieve a Secret from a Compute Instance**
+#### Purpose
 
-## **Purpose:** Retrieve secret programmatically using instance principal.
+Retrieve secret programmatically using instance principal.
 
 This is how applications securely access secrets at runtime.
 
-
-## **Prerequisites**
+#### Prerequisites
 
 Your instance must:
 
@@ -107,7 +108,7 @@ Your instance must:
 * Have an IAM policy allowing secret access
 
 
-### **A. Create Dynamic Group for Your Instance**
+#### A. Create Dynamic Group for Your Instance
 
 1. Go to **Identity & Security → Dynamic Groups**.
 2. Click **Create Dynamic Group**.
@@ -119,7 +120,7 @@ Your instance must:
    ```
 5. Save.
 
-### **B. Create IAM Policy to Allow Secret Retrieval**
+#### B. Create IAM Policy to Allow Secret Retrieval
 
 1. Open **Identity & Security → Policies**.
 2. Select your compartment.
@@ -134,7 +135,7 @@ Your instance must:
 4. Save.
 
 
-### **C. Retrieve Secret from Instance (Hands-On Command)**
+#### C. Retrieve Secret from Instance (Hands-On Command)
 
 SSH into your instance:
 
@@ -155,7 +156,7 @@ oci secrets secret-bundle get --secret-id <secret-ocid> --query "data."secret-bu
 ```
 
 
-## **Expected Result:**
+#### Expected Result
 
 The terminal prints:
 
@@ -168,7 +169,7 @@ SuperSecretP@ss123
 This confirms **secure retrieval via OCI Vault**, not from environment variables or config files.
 
 
-## **4. Summary of This Hands-On**
+## 4. Summary of This Hands-On
 
 You successfully:
 
@@ -181,12 +182,11 @@ You successfully:
 This workflow is the foundation of secure configuration management.
 
 
-## **5. Solutions Key (Instructor Reference)**
+## 5. Solutions Key (Instructor Reference)
 
 Use this key to confirm student outputs.
 
-
-## **✔ Solution Key — Vault Setup**
+#### ✔ Solution Key — Vault Setup
 
 ### Correct values:
 
@@ -196,7 +196,7 @@ Use this key to confirm student outputs.
 * Secret stored successfully
 
 
-## **✔ Solution Key — Dynamic Group Rules**
+#### ✔ Solution Key — Dynamic Group Rules
 
 ### Expected rule format:
 
@@ -207,7 +207,7 @@ ALL {instance.id = 'ocid1.instance.oc1..xxxxx'}
 Matching student’s instance OCID.
 
 
-## **✔ Solution Key — IAM Policy**
+#### ✔ Solution Key — IAM Policy
 
 ### Expected policy:
 
@@ -218,7 +218,7 @@ Allow dynamic-group <student-id>-dg to read secret-bundles in compartment <YOUR-
 Policy must be in correct compartment.
 
 
-## **✔ Solution Key — Secret Retrieval**
+#### ✔ Solution Key — Secret Retrieval
 
 Expected output:
 

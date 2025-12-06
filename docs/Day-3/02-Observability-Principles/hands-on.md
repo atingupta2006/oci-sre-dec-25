@@ -1,9 +1,9 @@
 
-## Hands-on Lab
+
 
 ## Student-Friendly Document with Solutions Key
 
-This hands-on introduces students to the fundamentals of **observability** and helps them practice enabling and viewing system logs in OCI. The exercises use the Compute instance hosting the **Class Enrollment Web App**.
+This hands-on introduces students to the fundamentals of **observability** and helps them practice enabling and viewing system logs in OCI. The exercises use the Compute instance hosting the **BharatMart application**.
 
 
 ## 1. Background Concepts (Short, Clear & Practical)
@@ -61,12 +61,14 @@ Instrumentation is how systems generate observability data.
 * Logs → structured log entries
 * Traces → spans and propagation
 
-The Class Enrollment App uses Flask + React, which naturally produces application logs. OCI Compute produces **system logs**, which we will enable.
+The BharatMart application uses Express.js + React and naturally produces structured application logs (JSON format via Winston logger). OCI Compute produces **system logs**, which we will enable for infrastructure-level observability.
 
 
 ## 2. Hands-On Task 1 — Enable System Logs for Compute Instance
 
-## **Purpose:** Ensure your VM emits system logs to OCI Logging.
+#### Purpose
+
+Ensure your VM emits system logs to OCI Logging.
 
 These logs help SREs:
 
@@ -99,7 +101,9 @@ These logs help SREs:
 
 ## 3. Hands-On Task 2 — View Logs in OCI Logging
 
-## **Purpose:** Learn how to explore and analyze system logs.
+#### Purpose
+
+Learn how to explore and analyze system logs.
 
 
 ## Steps:
@@ -176,7 +180,7 @@ Use this section to verify student results.
 These logs:
 
 * Help diagnose VM failures
-* Support troubleshooting of the Class Enrollment App
+* Support troubleshooting of the BharatMart application
 * Provide audit-level visibility into system events
 
 

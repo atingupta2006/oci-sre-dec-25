@@ -1,5 +1,5 @@
 
-## Hands-on Lab
+
 
 ## Student-Friendly Document with Complete Solution Key
 
@@ -44,27 +44,36 @@ A simple Terraform template that provisions:
 * 1 public subnet
 * 1 compute instance (optional if included in template)
 
-You may use:
+You will use the **BharatMart Terraform template** provided in the repository:
 
-* A template provided by the instructor
-* OR upload your own basic `main.tf`
+#### Location
 
-Example minimal template (for reference):
+`deployment/terraform/`
 
-```hcl
-provider "oci" {}
+This template includes:
+* VCN with public and private subnets
+* Internet Gateway and NAT Gateway
+* Security Lists with appropriate rules
+* Compute instances for BharatMart backend
+* Load Balancer with health checks
 
-resource "oci_core_vcn" "training_vcn" {
-  cidr_block = "10.0.0.0/16"
-  display_name = "training-vcn"
-  compartment_id = var.compartment_ocid
-}
-```
+#### Template Files
+* `versions.tf` - Terraform and provider versions
+* `variables.tf` - Input variable definitions
+* `main.tf` - Infrastructure resources
+* `outputs.tf` - Output values
+* `terraform.tfvars.example` - Example variables
+
+#### Note
+
+This is a complete, working Terraform configuration that provisions production-ready infrastructure for BharatMart, including a Load Balancer for traffic distribution.
 
 
 ## 2. Hands-On Task 1 — Upload the Terraform Template
 
-## **Purpose:** Load your Terraform configuration into Resource Manager.
+#### Purpose
+
+Load your Terraform configuration into Resource Manager.
 
 
 ## Steps:
@@ -90,7 +99,9 @@ Your stack is created and shows a **Terraform configuration summary**.
 
 ## 3. Hands-On Task 2 — Create the Resource Manager Stack
 
-## **Purpose:** Configure and prepare the stack for deployment.
+#### Purpose
+
+Configure and prepare the stack for deployment.
 
 
 ## Steps:
@@ -119,7 +130,9 @@ If there is an error in the template, the plan will fail (common and normal for 
 
 ## 4. Hands-On Task 3 — Apply the Stack (Provision Infra)
 
-## **Purpose:** Execute Terraform to create real cloud resources.
+#### Purpose
+
+Execute Terraform to create real cloud resources.
 
 
 ## Steps:

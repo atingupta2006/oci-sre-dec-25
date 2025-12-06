@@ -1,5 +1,5 @@
 
-## Hands-on Lab
+
 
 ## 1. Objective of This Hands-On Session
 
@@ -115,4 +115,221 @@ This foundational knowledge ensures everyone is ready for deeper SRE concepts su
 
 ☰ → **Observability & Management** → **Monitoring** → **Metric Explorer**
 
+---
+
+## 7. Optional: Quick Glimpse of BharatMart Platform (5 minutes)
+
+#### Purpose
+
+See SRE principles in action with the BharatMart training platform.
+
+This is a quick demonstration to show how SRE concepts apply to a real application. You'll observe metrics, logs, and observability features that we'll explore in detail in later sessions.
+
+### Prerequisites
+
+* Terminal access
+* Browser access
+
+### Step 1: Access the Application
+
+1. Open your browser.
+2. Navigate to **http://localhost:5173** (frontend) or **http://localhost:3000** (backend API).
+3. **What you see:** The BharatMart e-commerce interface or API documentation.
+
+#### Why it matters
+
+This is the application that generates all the metrics, logs, and traces we'll study in SRE training.
+
+### Step 2: View Metrics Endpoint (Demonstrates Observability)
+
+#### Purpose
+
+See how the application exposes metrics for monitoring.
+
+1. Open a terminal or use your browser.
+2. Access the metrics endpoint:
+   ```bash
+   curl http://localhost:3000/metrics
+   ```
+   Or visit in browser: **http://localhost:3000/metrics**
+
+#### What you should see
+
+```
+# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",route="/api/health",status_code="200"} 5
+
+# HELP http_request_duration_seconds Duration of HTTP requests in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{method="GET",route="/api/health",status_code="200",le="0.01"} 3
+...
+
+# HELP orders_created_total Total number of orders created
+# TYPE orders_created_total counter
+orders_created_total{status="pending"} 12
+```
+
+#### Why it matters for SRE
+
+* **Metrics are the foundation** of SRE measurement and monitoring
+* This is **Prometheus format** - industry standard for metrics collection
+* Every request is **automatically tracked** - no manual instrumentation needed
+* These metrics enable **SLOs, error budgets, and alerting**
+
+
+### Step 3: View Application Logs (Demonstrates Structured Logging)
+
+#### Purpose
+
+See how the application logs events for troubleshooting.
+
+1. Open a terminal.
+2. View the log file (if it exists):
+   ```bash
+   tail -n 20 logs/api.log
+   ```
+   Or if using Windows PowerShell:
+   ```powershell
+   Get-Content logs/api.log -Tail 20
+   ```
+
+#### What you should see
+
+BharatMart generates structured JSON logs. Each log entry is a complete JSON object on a single line. Here's an example of an actual log entry:
+
+```json
+{
+  "coldStart": false,
+  "environment": "development",
+  "eventType": "api_request",
+  "ip": "::ffff:127.0.0.1",
+  "level": "info",
+  "message": "API Request",
+  "method": "GET",
+  "path": "/api/products",
+  "requestSize": 2,
+  "responseSize": 500,
+  "response_time_ms": 218,
+  "service": "sre-training-platform",
+  "span_id": "6312faf92861776b",
+  "status_code": 200,
+  "timestamp": "2025-11-30 16:49:50",
+  "trace_flags": "01",
+  "trace_id": "087fdc86277e500e32990e3ba6f77966",
+  "user_agent": "Mozilla/5.0..."
+}
+```
+
+#### Key Log Fields
+
+* `eventType` - Type of event (`api_request`, `api_request_start`, or business events)
+* `level` - Log level (`info`, `warn`, `error`)
+* `method`, `path` - HTTP request details
+* `status_code`, `response_time_ms` - Response details
+* `span_id`, `trace_id` - OpenTelemetry tracing identifiers (for distributed tracing)
+* `timestamp` - When the event occurred
+* `environment` - Deployment environment
+* `service` - Service name
+
+#### Why it matters for SRE
+
+* **Structured JSON logs** are easy to parse, search, and analyze
+* Each log entry contains **rich context** (method, route, status, duration, tracing IDs)
+* Logs help **debug issues** when metrics show anomalies
+* **Tracing IDs** (`trace_id`, `span_id`) allow correlating logs across services
+* Logs provide **audit trail** for business events (orders, payments)
+* These logs can be ingested into **OCI Logging Service** for centralized analysis
+
+**Note:** To ingest these logs into OCI Logging Service for centralized monitoring, you'll configure the OCI Cloud Agent on your Compute instances. This will be covered in detail in Day 2 and Day 3 topics.
+
+
+### Step 4: Check Health Endpoint (Demonstrates Monitoring)
+
+#### Purpose
+
+See how applications expose health status for monitoring.
+
+1. In your browser or terminal, access:
+   ```bash
+   curl http://localhost:3000/api/health
+   ```
+   Or visit: **http://localhost:3000/api/health**
+
+#### What you should see
+
+```json
+{
+  "ok": true,
+  "count": 1
+}
+```
+
+#### Note
+
+The health endpoint returns minimal health status:
+- `ok`: Boolean indicating overall health status (true = healthy, false = unhealthy)
+- `count`: Number of records returned from database query (1 if healthy)
+
+This simple format is ideal for basic health checks and load balancer probes. For more comprehensive system information including detailed service health, deployment details, and configuration, use the `/api/system/info` endpoint.
+
+#### Why it matters for SRE
+
+* Health endpoints enable **automated monitoring** and alerting
+* External monitoring systems can **poll this endpoint** to check service availability
+* Health checks are the foundation of **SLIs for availability**
+* This is how you detect **incidents automatically**
+
+
+### Step 5: Make a Test Request (Demonstrates Real-Time Metrics)
+
+#### Purpose
+
+See metrics update in real-time as the application handles requests.
+
+1. Make a few API requests:
+   ```bash
+   curl http://localhost:3000/api/products
+   curl http://localhost:3000/api/health
+   ```
+2. Immediately check metrics again:
+   ```bash
+   curl http://localhost:3000/metrics | grep http_requests_total
+   ```
+
+#### What you should see
+
+The `http_requests_total` counter values have increased. This demonstrates:
+
+* Metrics are **incrementing in real-time**
+* Every request is **automatically measured**
+* This is how SREs **track system behavior** continuously
+
+#### Why it matters for SRE
+
+* Real-time metrics enable **immediate detection** of issues
+* Counters show **request rates** - key for understanding load
+* This data feeds into **dashboards and alerts** that SREs monitor
+
+### Key Takeaways from BharatMart Glimpse
+
+* ✅ **Metrics are automatic** - The application tracks everything without manual code changes
+* ✅ **Logs are structured** - Easy to parse, search, and analyze
+* ✅ **Health checks exist** - Enable automated monitoring
+* ✅ **Observability is built-in** - Ready for SRE practices from day one
+
+---
+
+## 8. Final Summary
+
+### OCI Navigation Recap
+* **Compute** = Where workloads run (VMs, containers)
+* **Monitoring** = Where you observe system health
+
+### BharatMart Platform Recap
+* **Metrics endpoint** (`/metrics`) = Automatic request and business metrics
+* **Logs** (`logs/api.log`) = Structured JSON logs for debugging
+* **Health endpoint** (`/api/health`) = Service availability status
+
+These form the foundation for all SRE work you'll do throughout this training.
 

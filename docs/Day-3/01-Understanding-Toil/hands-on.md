@@ -1,9 +1,9 @@
 
-## Hands-on Lab
+
 
 ## Instructor-Optimized, Student-Friendly Version with Solutions Key
 
-This hands-on activity helps students understand **toil**, identify it in day‑to‑day operations, and practice prioritizing automation work. The exercise uses the **Class Enrollment Web App** as the operational environment.
+This hands-on activity helps students understand **toil**, identify it in day‑to‑day operations, and practice prioritizing automation work. The exercise uses the **BharatMart e-commerce platform** as the operational environment.
 
 
 ## 1. Background Concepts (Short & Clear)
@@ -21,7 +21,7 @@ This hands-on activity helps students understand **toil**, identify it in day‑
 
 * Restarting services when CPU spikes
 * Manually checking logs for common errors
-* Updating enrollment capacity in database by hand
+* Updating inventory levels in database by hand
 * Responding to the same alert repeatedly
 
 
@@ -49,15 +49,17 @@ Tasks that are rare or require deep human judgment are *not* good automation can
 
 ## 2. Hands-On Activity 1 — List Manual Operational Tasks in the Sample App
 
-## **Purpose:** Identify real toil based on the Class Enrollment application.
+#### Purpose
 
-Imagine you are running the **Class Enrollment Web App** in production. List all tasks that require manual operator effort.
+Identify real toil based on the BharatMart application.
+
+Imagine you are running the **BharatMart e-commerce platform** in production. List all tasks that require manual operator effort.
 
 ### Student Instructions:
 
 Use the table below to list **at least 6–10 manual tasks** you think an operator would perform.
 
-Examples include: restarts, log checks, user provisioning, database cleanup, etc.
+Examples include: restarts, log checks, user provisioning, database cleanup, inventory updates, order status checks, etc.
 
 | Manual Task (Student Entry) | Description | Why It’s Toil? |
 | --------------------------- | ----------- | -------------- |
@@ -72,7 +74,9 @@ Be detailed—this will help in the automation ranking.
 
 ## 3. Hands-On Activity 2 — Rank Tasks by Time & Frequency
 
-## **Purpose:** Learn how SREs prioritize automation work.
+#### Purpose
+
+Learn how SREs prioritize automation work.
 
 You will evaluate each task based on:
 
@@ -124,12 +128,12 @@ Below is a sample solution set. Student answers will vary depending on assumptio
 
 Expected examples:
 
-| Manual Task                        | Description                    | Why It’s Toil?                          |
+| Manual Task                        | Description                    | Why It's Toil?                          |
 | ---------------------------------- | ------------------------------ | --------------------------------------- |
-| Restarting Flask backend           | Restarting app when CPU spikes | Repetitive, reactive, automatable       |
-| Cleaning stale student sessions    | Deleting stuck DB sessions     | Happens often during errors; scriptable |
+| Restarting BharatMart API          | Restarting app when CPU spikes | Repetitive, reactive, automatable       |
+| Cleaning stale order sessions      | Deleting stuck DB sessions     | Happens often during errors; scriptable |
 | Checking logs for 500 errors       | Searching logs manually        | Repetitive, predictable patterns        |
-| Updating course capacity manually  | Editing DB values              | Frequent during enrollment week         |
+| Updating inventory levels manually | Editing DB values              | Frequent during peak shopping periods   |
 | Resetting passwords for users      | Admin intervention             | High-frequency support request          |
 | Fixing CORS configuration manually | Editing config file            | Should be automated via IaC             |
 
@@ -143,7 +147,7 @@ Sample scoring:
 | Manual log checks        | 3 | 5 | 15         | High     |
 | Restarting app           | 2 | 4 | 8          | High     |
 | Password resets          | 3 | 4 | 12         | High     |
-| Updating course capacity | 4 | 3 | 12         | High     |
+| Updating inventory levels | 4 | 3 | 12         | High     |
 | Cleaning stale sessions  | 3 | 3 | 9          | Medium   |
 | Fixing CORS config       | 5 | 1 | 5          | Low      |
 
@@ -151,7 +155,7 @@ Sample scoring:
 
 * Log checks + restarts happen frequently → top candidates for automation.
 * Password resets are high-frequency → automate via self‑service UI.
-* Updating course capacity is done during peak seasons → strong automation candidate.
+* Updating inventory levels is done during peak shopping seasons → strong automation candidate.
 * CORS fixes are rare → low automation value.
 
 

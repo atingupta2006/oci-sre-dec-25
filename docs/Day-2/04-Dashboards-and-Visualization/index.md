@@ -1,10 +1,32 @@
 # Day 2 – Measuring Reliability and Monitoring on OCI
 
-## Subtopic: Dashboards and Visualization
+## Topic 4: Dashboards and Visualization
 
-### TOC Reference: Day 2 → Measuring Reliability and Monitoring on OCI → Dashboards and Visualization
+
 
 ### Audience Context: IT Engineers and Developers
+
+---
+
+## 0. Deployment Assumptions
+
+For this topic, we assume that **BharatMart e-commerce platform** is already deployed on OCI with the following architecture:
+
+#### Assumed Deployment
+* **BharatMart API** running on one or more OCI Compute instances
+* **OCI Load Balancer** distributing traffic to API instances
+* **Database** (OCI Autonomous Database or Supabase) for data storage
+* **OCI Cloud Agent** enabled on Compute instances for metric collection
+* **BharatMart application** exposing Prometheus metrics at `/metrics` endpoint
+* **Alarms configured** for key metrics (as covered in previous topic)
+
+#### Available Metrics for Dashboards
+* OCI infrastructure metrics (CPU, memory, network, disk from Compute instances)
+* Load Balancer metrics (backend health, latency, request counts, error rates)
+* BharatMart application metrics (HTTP latency, error counts, business metrics from `/metrics` endpoint)
+* Alarm status from configured OCI alarms
+
+This deployment setup ensures that dashboards can visualize both infrastructure and application-level metrics, providing complete observability for SRE monitoring.
 
 ---
 
@@ -87,42 +109,97 @@ SRE‑aligned dashboards should include:
 
 ## 4. Real‑World Examples
 
-### Example 1 — API Latency Dashboard
+### Example 1 — BharatMart API Latency Dashboard
 
-* P99 latency trending upward indicates overload.
-* Developers link spike to heavy DB queries.
+#### Scenario
+
+Dashboard showing BharatMart Order API latency metrics.
+
+* **P99 latency** from BharatMart `/metrics` endpoint trending upward indicates overload during peak shopping hours:
+  - Metric: `http_request_duration_seconds{route="/api/orders"}`
+  - Query: `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{route="/api/orders"}[5m]))`
+  - Observation: P99 latency increases from 200ms to 800ms during peak hours
+* **P95 latency** shows similar trend:
+  - Query: `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{route="/api/orders"}[5m]))`
+  - Observation: P95 latency increases from 150ms to 500ms
+* Developers link spike to heavy database queries in order processing:
+  - Correlated with `external_call_latency_ms{dependency="supabase"}` metric showing increased database query times
+* Dashboard combines infrastructure metrics (OCI Load Balancer latency) with application metrics (BharatMart API latency) for complete view:
+  - OCI Load Balancer backend latency + BharatMart `http_request_duration_seconds` = total user experience latency
 
 ### Example 2 — Load Balancer Health Visualization
 
 * Sudden drop in healthy backend nodes shows deployment failure.
 
-### Example 3 — Error Rate Panel Using Custom Metrics
+### Example 3 — BharatMart Error Rate Panel Using Application Metrics
 
-* Custom metric `custom.myapp.errors` shows burst of failures.
+#### Scenario
+
+Dashboard tracking BharatMart order placement error rates.
+
+* **Error rate** from BharatMart `/metrics` endpoint:
+  - Metric: `http_requests_total{status_code=~"5..", route="/api/orders"}`
+  - Query: `rate(http_requests_total{status_code=~"5..", route="/api/orders"}[5m])`
+  - Percentage: `(rate(http_requests_total{status_code=~"5..", route="/api/orders"}[5m]) / rate(http_requests_total{route="/api/orders"}[5m])) * 100`
+* **Order failure rate** from business metrics:
+  - Metric: `orders_failed_total`
+  - Query: `rate(orders_failed_total[5m]) / (rate(orders_success_total[5m]) + rate(orders_failed_total[5m])) * 100`
+* Shows error rate trend over time, highlighting peak shopping hours:
+  - Error rate spikes from <0.1% to >2% during peak hours
+  - Order failure rate correlates with HTTP error rate
+* SRE correlates error spikes with infrastructure events:
+  - Database slowdowns: `external_call_latency_ms{dependency="supabase"}` increases simultaneously
+  - Load balancer issues: OCI Load Balancer backend health decreases
+* Alarms configured to trigger when error rate exceeds SLO threshold:
+  - Alert when error percentage > 0.5% for 2 consecutive minutes
 
 ---
 
 ## 5. Case Study
 
-### Scenario: SLO Dashboard for Checkout API
+### Scenario: SLO Dashboard for BharatMart Order API
+
+#### Architecture
+```
+OCI Load Balancer → BharatMart API VMs → Database
+```
 
 A service‑level dashboard shows:
 
-* P99 latency
-* Error percentage
-* Healthy backend hosts
-* CPU and memory for application VMs
-* Alarm status
+* **P99 latency** from BharatMart `/metrics` endpoint:
+  - Metric: `http_request_duration_seconds{route="/api/orders"}`
+  - Query: `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{route="/api/orders"}[5m]))`
+* **Error percentage** (5xx errors) from BharatMart custom metrics:
+  - Metric: `http_requests_total{status_code=~"5.."}`
+  - Query: `(rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m])) * 100`
+* **Order success rate** from business metrics:
+  - Metric: `orders_success_total` vs `orders_failed_total`
+  - Query: `rate(orders_success_total[5m]) / (rate(orders_success_total[5m]) + rate(orders_failed_total[5m])) * 100`
+* **Healthy backend hosts** from OCI Load Balancer metrics
+* **CPU and memory** for BharatMart API Compute instances
+* **Alarm status** widgets for all configured alarms
+* **Business metrics** from BharatMart `/metrics`:
+  - Order creation rate: `rate(orders_created_total[5m])`
+  - Payment processing rate: `rate(payments_processed_total{status="completed"}[5m])`
+  - Total order value: `increase(orders_value_total[1h])`
 
 ### Finding
 
-* During peak load, P99 latency breach causes SLO violation.
-* Dashboard clearly shows CPU saturation → scaling required.
+* During peak shopping hours, P99 latency breach causes SLO violation:
+  - Dashboard shows `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{route="/api/orders"}[5m])) > 500ms`
+* Dashboard clearly shows CPU saturation on API instances → autoscaling required.
+* Error rate spikes correlate with database connection pool exhaustion:
+  - `rate(http_requests_total{status_code=~"5..", route="/api/orders"}[5m])` spikes during peak hours
+  - `orders_failed_total` increases simultaneously
+* Correlation between infrastructure metrics (CPU) and application metrics (latency) visible:
+  - High CPU correlates with increased `http_request_duration_seconds` percentiles
 
 ### Result
 
-* Team adjusts autoscaling thresholds.
-* SLO violations significantly reduced.
+* Team adjusts autoscaling thresholds based on dashboard insights.
+* Database connection pooling optimized.
+* SLO violations significantly reduced during peak traffic.
+* Dashboard becomes primary tool for reliability monitoring.
 
 ---
 

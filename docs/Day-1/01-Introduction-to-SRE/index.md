@@ -1,6 +1,6 @@
 # Day 1 – SRE Fundamentals and OCI Foundations
 
-## Subtopic: Introduction to SRE
+## Topic 1: Introduction to SRE
 
 ---
 
@@ -80,15 +80,29 @@ Manual operations increase error risk; automation ensures consistency.
 
 Logs, metrics, and traces allow engineers to understand behaviour, troubleshoot, and improve systems.
 
+#### BharatMart Implementation
+
+The platform implements all three pillars of observability:
+
 ```
-Application
+BharatMart Application (Express.js API)
   | \
   |  \
  Logs Metrics Traces
   |    |       |
   v    v       v
- Observability Platform --> SRE Action
+Winston  Prometheus  OpenTelemetry
+  |         |            |
+  v         v            v
+logs/    /metrics     OTLP Endpoint
+api.log  endpoint      (optional)
 ```
+
+#### Key Observability Features
+- **Metrics:** Prometheus metrics exposed at `/metrics` endpoint
+- **Metrics Middleware:** Automatic request tracking and latency measurement
+- **Logging:** Structured JSON logging via Winston logger
+- **Tracing:** Optional distributed tracing via OpenTelemetry
 
 ### Design for Failure
 
@@ -106,34 +120,155 @@ Learning from incidents without individual blame.
 
 ## 4. Real-World Examples
 
-### Example 1 — API Latency Spikes
+### Example 1 — API Latency Spikes in BharatMart
 
-A new feature increases API execution time.
+#### Scenario
 
-* Developers see a need to optimise code.
-* SRE sees a P99 latency breach impacting user experience.
+A new checkout feature increases API execution time.
 
-SRE Actions:
+* **Developer's Perspective:** Sees a need to optimise code for better performance.
+* **SRE's Perspective:** Sees a P99 latency breach impacting user experience and potential revenue loss.
 
-* Track latency SLIs.
-* Visualise P95/P99 spikes.
-* Work with developers to optimise slow paths.
+#### How BharatMart Demonstrates This
+
+The platform includes built-in latency monitoring through Prometheus metrics:
+
+- Every API request is automatically tracked for duration
+- Metrics are exposed at `/metrics` endpoint in Prometheus format
+- Key metric: `http_request_duration_seconds` - tracks all request latencies
+
+#### SRE Actions in BharatMart
+
+1. **Track latency SLIs** - Access metrics endpoint: `curl http://localhost:3000/metrics`
+2. **Visualise P95/P99 spikes** - Query Prometheus for percentile distributions
+3. **Work with developers** - Share metrics data to identify slow code paths
+4. **Monitor continuously** - Set up alerts when P99 exceeds threshold (e.g., > 500ms)
 
 ### Example 2 — OCI Compute Instance Degradation
 
-An OCI VM slows down and becomes temporarily unresponsive.
+#### Scenario
 
-* IT engineer restarts the instance.
-* Issue reappears.
+An OCI VM running BharatMart slows down and becomes temporarily unresponsive.
 
-SRE Actions:
+* **IT Engineer's Action:** Restarts the instance, but the issue reappears.
+* **SRE's Investigation:** Uses observability to find root cause.
 
-* Review CPU, memory, disk, network metrics.
-* Identify memory leak due to app behaviour.
-* Implement monitoring and alerts.
+#### How BharatMart Demonstrates This
+
+The platform generates comprehensive metrics that would help identify the issue:
+
+1. **HTTP Request Metrics** - Detecting slow API responses
+   - `http_requests_total{status_code="500"}` - Server errors
+   - `http_request_duration_seconds` - Response time degradation
+
+2. **Application Logs** - Structured JSON logs for debugging
+
+   BharatMart generates structured JSON logs with rich context. Example log entry:
+
+   ```json
+   {
+     "coldStart": false,
+     "environment": "development",
+     "eventType": "api_request",
+     "level": "error",
+     "message": "API Request",
+     "method": "GET",
+     "path": "/api/orders",
+     "response_time_ms": 5000,
+     "service": "sre-training-platform",
+     "span_id": "6312faf92861776b",
+     "status_code": 500,
+     "timestamp": "2025-11-30 16:49:50",
+     "trace_id": "087fdc86277e500e32990e3ba6f77966"
+   }
+   ```
+
+   These logs include OpenTelemetry tracing fields (`trace_id`, `span_id`) for distributed tracing correlation and can be ingested into OCI Logging Service.
+
+3. **Business Metrics** - Impact on user transactions
+   - `orders_failed_total` - Failed orders due to system issues
+   - `payments_processed_total{status="failed"}` - Payment failures
+
+#### SRE Actions in BharatMart
+
+1. **Review metrics** - Check `/metrics` endpoint for error rates and latency spikes
+2. **Analyze logs** - Review `logs/api.log` for error patterns and stack traces
+3. **Identify root cause** - Correlate metrics (high latency) with logs (database connection pool exhaustion)
+4. **Implement monitoring** - Set up Prometheus alerts for error rate thresholds
+5. **Document solution** - Create runbook for similar incidents
+
+### Example 3 — Observability in Action (BharatMart Platform)
+
+**Scenario:** Understanding the three pillars of observability through BharatMart.
+
+**BharatMart implements all three observability pillars:**
+
+1. **Metrics (Prometheus)**
+
+    - Endpoint: `GET /metrics`
+    - HTTP metrics, business metrics (orders, payments)
+
+2. **Logs (Winston)**
+
+    - Structured JSON logging with rich context
+    - File: `logs/api.log` (can be ingested into OCI Logging Service)
+    - Request/response logging with OpenTelemetry trace IDs
+    - Error logs with stack traces
+    - Business event logs (orders, payments)
+    - Includes fields: `trace_id`, `span_id`, `eventType`, `response_time_ms`, etc.
+
+3. **Traces (OpenTelemetry)**
+
+    - Optional distributed tracing via OTLP
+    - Request correlation across services
+
+#### How This Demonstrates SRE Principles
+
+```
+BharatMart Application
+  | \
+  |  \
+Logs Metrics Traces
+  |    |       |
+  v    v       v
+Observability Platform --> SRE Action
+```
+
+This architecture allows SREs to:
+
+    - **Measure** system behavior quantitatively (metrics)
+    - **Understand** what happened (logs)
+    - **Trace** request flow across components (traces)
+    - **Take action** based on data, not guesswork
 
 
 ## 4. Additional Notes
 
 * SRE becomes most effective when integrated early in design and development cycles.
 * IT engineers and developers benefit significantly from adopting SRE thinking.
+
+## 5. BharatMart Platform: SRE Principles in Practice
+
+BharatMart is an e-commerce platform specifically designed for SRE training. It demonstrates SRE principles through:
+
+### Measurability
+- **Prometheus metrics** at `/metrics` endpoint
+- Business metrics: orders, payments, inventory
+- System metrics: HTTP requests, latency, errors
+
+### Observability
+- **Structured JSON logging** for easy parsing and analysis
+- **Distributed tracing** via OpenTelemetry (optional)
+- **Health endpoints** for automated monitoring
+
+### Reliability Engineering
+- **Chaos engineering** capabilities for resilience testing
+- **Multiple deployment modes** (single-VM, multi-tier, OCI PaaS)
+- **Adapter pattern** for infrastructure flexibility
+
+### Automation
+- **Background workers** for async processing
+- **Infrastructure as Code** examples
+- **Automated testing** suite included
+
+Throughout this training, you'll use BharatMart to practice SRE concepts with a real, production-grade application.

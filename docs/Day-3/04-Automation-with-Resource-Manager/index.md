@@ -1,10 +1,37 @@
 # Day 3 – Toil Reduction, Observability, and Automation
 
-## Subtopic: Automation with Resource Manager
+## Topic 4: Automation with Resource Manager
 
-### TOC Reference: Day 3 → Toil Reduction, Observability, and Automation → Automation with Resource Manager
+
 
 ### Audience Context: IT Engineers and Developers
+
+---
+
+## 0. Deployment Assumptions
+
+For this topic, we assume that **BharatMart e-commerce platform** infrastructure can be provisioned and managed using OCI Resource Manager with Terraform.
+
+#### Assumed Deployment
+* Infrastructure components (VCN, Compute instances, Load Balancer) can be provisioned via Terraform
+* OCI Resource Manager will be used to manage Terraform state and execution
+* Infrastructure changes will be managed as code rather than manual configuration
+
+#### Terraform Template Provided
+
+A complete, working Terraform template for BharatMart infrastructure is available in `deployment/terraform/`. This template includes:
+
+* **VCN** with public and private subnets
+* **Internet Gateway** and **NAT Gateway** for network connectivity
+* **Security Lists** with appropriate rules
+* **Compute Instances** (configurable count) for BharatMart backend
+* **Load Balancer** with health checks on `/api/health` endpoint
+
+The template is fully parameterized using input variables, specifies Terraform versions (>= 1.5.0) and OCI Provider versions (~> 5.0), and is ready for deployment via OCI Resource Manager.
+
+For usage instructions and deployment steps, see `deployment/terraform/README.md`.
+
+This automation approach eliminates toil from manual infrastructure provisioning and configuration management for BharatMart deployments.
 
 ---
 
@@ -93,40 +120,58 @@ Teams use the same Terraform template to create dev, test, and prod stacks.
 
 VCN, subnets, route tables, security lists created automatically.
 
-### Example 3 — Automated Deployment for Application Teams
+### Example 3 — Automated BharatMart Infrastructure Deployment
 
-Developers use Resource Manager to deploy application VMs, OKE clusters, or serverless components.
+#### Scenario
+
+Automated provisioning of BharatMart infrastructure using Terraform.
+
+* IT engineers use Resource Manager to deploy BharatMart infrastructure (VCN, Compute instances, Load Balancer) consistently across environments
+* Terraform templates define all infrastructure components
+* Same template used for dev, staging, and production environments
+* Eliminates manual provisioning errors and configuration drift
 
 ---
 
 ## 5. Case Study
 
-### Scenario: Manual Provisioning Causing Toil
+### Scenario: Reducing Toil in BharatMart Infrastructure Provisioning
 
-An engineering team manually provisions:
+#### Problem
 
-* VCN
-* Compute Instances
-* Load balancers
-* IAM policies
+BharatMart infrastructure manually provisioned causing significant toil.
+
+An engineering team manually provisions BharatMart infrastructure:
+
+* VCN with subnets and route tables
+* OCI Compute Instances for API
+* OCI Load Balancer for traffic distribution
+* Security lists and IAM policies
+* Database configurations
 
 ### Problems
 
-* Inconsistent environments
-* Slow provisioning times
-* Frequent human errors
+* Inconsistent environments between dev/staging/prod
+* Slow provisioning times (hours per environment)
+* Frequent human errors (wrong subnet, missing security rules)
+* Configuration drift between environments
+* Cannot easily reproduce exact infrastructure setup
 
 ### Solution
 
-* Terraform templates created
-* Resource Manager stacks deployed
-* All environments standardized
+* Terraform templates created for BharatMart infrastructure
+* Resource Manager stacks deployed for each environment
+* All environments standardized using same templates
+* Variables used for environment-specific differences (instance sizes, resource names)
+* Infrastructure changes tracked in version control
 
 ### Result
 
-* Deployment time reduced from hours to minutes
-* Human errors eliminated
-* Toil dropped significantly
+* Deployment time reduced from hours to minutes (from 4 hours → 15 minutes)
+* Human errors eliminated through automated provisioning
+* Configuration consistency achieved across all environments
+* Toil dropped significantly (from 4 hours/week → 15 minutes/week per environment)
+* Faster development cycles with consistent infrastructure
 
 ---
 
@@ -200,4 +245,36 @@ Stack
 ## 11. Additional Notes
 
 * This subtopic prepares you for the Day 3 Subtopic 4 Hands-On lab.
-* Terraform with Resource Manager becomes essential for Day 5’s capstone project.
+* Terraform with Resource Manager becomes essential for Day 5's capstone project.
+* A complete Terraform template for BharatMart infrastructure is provided in `deployment/terraform/` directory.
+
+## 12. Terraform Template for BharatMart
+
+A complete, working Terraform configuration is provided in the repository at `deployment/terraform/`.
+
+### What It Includes
+
+The template provisions:
+
+* **VCN** with public and private subnets
+* **Internet Gateway** for public connectivity
+* **NAT Gateway** (optional) for private subnet outbound access
+* **Security Lists** with rules for Load Balancer and Compute instances
+* **Compute Instances** (configurable count) for BharatMart backend API
+* **Load Balancer** with health checks on `/api/health` endpoint
+
+### Key Features
+
+* **Version-specified**: Terraform >= 1.5.0, OCI Provider ~> 5.0
+* **Fully parameterized**: All resource names and configurations use input variables
+* **Production-ready**: Includes Load Balancer, proper security lists, and health checks
+* **Expandable**: Designed to easily add more resources (database, cache, etc.)
+
+### Usage
+
+1. Create a ZIP file of the Terraform configuration
+2. Upload to OCI Resource Manager
+3. Fill in required variables (compartment_id, image_id, ssh_public_key)
+4. Run Plan and Apply jobs
+
+See `deployment/terraform/README.md` for detailed usage instructions and expansion plans.

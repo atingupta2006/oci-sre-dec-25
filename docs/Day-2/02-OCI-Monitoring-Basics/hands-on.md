@@ -1,9 +1,7 @@
 
-## Hands-on Lab
 
-## Instructor-Optimized, Student-Friendly Document
 
-This hands-on activity focuses only on the practical elements of **OCI Monitoring**, using the **Compute instance running your Class‑Enrollment application**. Students will learn where metrics come from, how to view them, and how to understand namespaces and metric names.
+This hands-on activity focuses only on the practical elements of **OCI Monitoring**, using the **Compute instance running your BharatMart application**. Students will learn where metrics come from, how to view them, and how to understand namespaces and metric names.
 
 
 ## 1. Objective of This Hands-On
@@ -14,7 +12,7 @@ By the end of this exercise, learners will:
 * Identify metric namespaces and types
 * Differentiate between default and custom metrics
 * Enable and view Compute metrics
-* Inspect metric names relevant to the Class Enrollment app environment
+* Inspect metric names relevant to the BharatMart app environment
 
 This activity connects directly to future topics—SLOs, alerting, dashboards, and incident response.
 
@@ -58,15 +56,62 @@ Think of namespaces as “folders” that contain related metric names.
 * **Custom metrics:** sent by your application or scripts
 
   * API call counts
-  * Enrollment success rate
-  * App latency metrics
+  * Order placement success rate
+  * API latency metrics
 
-For this lab, we only use **default metrics** from the Compute instance running the Class Enrollment app.
+**Note:** BharatMart application exposes custom metrics at `/metrics` endpoint:
+- `http_request_duration_seconds` - Request latency
+- `http_requests_total` - Request counts with status codes
+- `orders_created_total`, `orders_success_total`, `orders_failed_total` - Business metrics
+- `payments_processed_total` - Payment metrics
 
+These custom metrics can be integrated with OCI Monitoring (see Day 2 Topic 3, Section 5.2 for steps). For this introductory lab, we focus on **default infrastructure metrics** from the Compute instance to understand OCI Monitoring basics.
+
+
+## 3. Hands-On Task 0 — Understand System Configuration
+
+#### Purpose
+
+First, understand what BharatMart application configuration and services are available.
+
+Before setting up monitoring, it's helpful to understand the system configuration. BharatMart provides a system information endpoint that shows deployment details, enabled features, and service health.
+
+## Steps:
+
+1. **Check System Information:**
+   ```bash
+   curl http://localhost:3000/api/system/info | jq '.'
+   ```
+
+2. **View Deployment Configuration:**
+   ```bash
+   curl http://localhost:3000/api/system/info | jq '.deployment'
+   ```
+
+3. **Check Service Health:**
+   ```bash
+   curl http://localhost:3000/api/system/info | jq '.services'
+   ```
+
+4. **View Enabled Features:**
+   ```bash
+   curl http://localhost:3000/api/system/info | jq '.features'
+   ```
+
+#### What this shows
+
+- Deployment mode (single-vm, multi-tier, etc.)
+- Database, cache, and worker configurations
+- Which observability features are enabled (metrics, logging, tracing)
+- Service health status
+
+This information helps you understand what metrics and logs are available for monitoring setup.
+
+---
 
 ## 3. Hands-On Task 1 — Enable Metrics for Compute Instance
 
-### Purpose: Ensure your Class Enrollment app’s VM is sending default compute metrics.
+### Purpose: Ensure your BharatMart app's VM is sending default compute metrics.
 
 Metrics for Compute are enabled automatically **if the OCI Monitoring Agent is installed**. Most images like Oracle Linux include it by default.
 
@@ -127,7 +172,9 @@ You should see metrics like:
 * `DiskBytesWritten`
 
 
-## **Student Activity:** List the metric names you find.
+#### Student Activity
+
+List the metric names you find.
 
 Use this table:
 
@@ -203,12 +250,12 @@ oci_computeagent
 | VnicBytesTx          | Outgoing bytes on the VNIC                  |
 | CpuUtilizationPerCpu | CPU usage measured per core                 |
 
-### ✔ Why these metrics matter for the Class Enrollment App:
+### ✔ Why these metrics matter for the BharatMart App:
 
-* **CPU** → sudden spikes may indicate overloaded API requests.
-* **Memory** → memory pressure may cause app slowdowns.
-* **Network** → traffic spikes align with student enrollment bursts.
-* **Disk I/O** → high values may signal database or logging bottlenecks.
+* **CPU** → sudden spikes may indicate overloaded API requests during peak shopping hours.
+* **Memory** → memory pressure may cause app slowdowns, impacting order placement latency.
+* **Network** → traffic spikes align with peak shopping periods and order placement bursts.
+* **Disk I/O** → high values may signal database or logging bottlenecks affecting BharatMart performance.
 
-Students should recognize that these default metrics form the baseline for diagnosing reliability issues.
+Students should recognize that these default metrics form the baseline for diagnosing reliability issues. Additionally, BharatMart exposes application-level metrics at the `/metrics` endpoint which complement these infrastructure metrics.
 

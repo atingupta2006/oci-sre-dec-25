@@ -1,250 +1,339 @@
 # Day 3 – Toil Reduction, Observability, and Automation
 
-## Hands-On Lab: Building Dashboards and Visualization
+## Topic 1: Understanding Toil
 
-### TOC Reference: Day 2 → Measuring Reliability and Monitoring on OCI → Hands-On for Dashboards and Visualization
+
 
 ### Audience Context: IT Engineers and Developers
 
-All steps in this lab follow the latest OCI Console interface at the time of writing.
+---
+
+## 0. Deployment Assumptions
+
+For this topic, we assume that **BharatMart e-commerce platform** is already deployed on OCI and running in production. The platform generates operational work that requires manual intervention, which is the focus of toil identification and reduction.
+
+#### Assumed Deployment
+* **BharatMart API** running on one or more OCI Compute instances
+* **OCI Load Balancer** distributing traffic to API instances
+* **Database** (OCI Autonomous Database or Supabase) for data storage
+* Application logs, metrics, and alarms configured
+
+#### How to Deploy
+
+BharatMart infrastructure can be deployed using **OCI Resource Manager with Terraform**. A complete Terraform template is provided in `deployment/terraform/` that provisions:
+
+1. **VCN** with public and private subnets
+2. **Compute Instances** for BharatMart backend API (configurable count)
+3. **Load Balancer** with health checks on `/api/health` endpoint
+4. **Security Lists** with appropriate rules for Load Balancer and Compute instances
+5. **Internet Gateway** and **NAT Gateway** for network connectivity
+
+#### Quick Deployment Steps
+1. Create ZIP file of `deployment/terraform/` directory
+2. Upload to OCI Resource Manager (Console → Resource Manager → Stacks)
+3. Fill in required variables (compartment_id, image_id, ssh_public_key)
+4. Run Plan and Apply jobs to provision infrastructure
+5. Deploy BharatMart application on the Compute instances
+6. Configure environment variables and start the application
+
+For detailed deployment instructions, see `deployment/terraform/README.md`.
+
+This operational setup generates various manual tasks that demonstrate toil concepts for SRE learning.
 
 ---
 
-## 1. Background and Purpose
+## 1. Concept Overview
 
-Dashboards are a core SRE tool used for:
+**Toil** is manual, repetitive, automatable work that:
 
-* Visualizing SLIs
-* Tracking SLO compliance
-* Monitoring real-time resource behaviour
-* Observing ongoing incidents
-* Supporting on-call troubleshooting
+* Is triggered by events rather than engineering intention
+* Doesn't create long-term value
+* Scales linearly with service growth
+* Happens frequently and consumes engineering time
 
-This hands-on lab teaches participants how to build an OCI dashboard focused on latency, availability, and error indicators using real metrics from Compute instances and Load Balancers.
+Understanding and reducing toil is fundamental to SRE practice. It allows teams to focus on engineering work that improves reliability, rather than repetitive operational tasks.
 
----
+Key principles:
 
-## 2. Objectives
-
-* Create an OCI custom dashboard.
-* Add latency, CPU, and network metric charts.
-* Add error-rate visualizations.
-* Add alarm widgets for quick incident awareness.
-* Organize panels to reflect the application’s architecture.
+* Toil consumes error budget without improving reliability
+* Automation is the primary mechanism for toil reduction
+* Not all manual work is toil (some requires human judgment)
+* Toil reduction is an ongoing process, not a one-time effort
 
 ---
 
-## 3. Prerequisites
+## 2. How This Applies to IT Engineers and Developers
 
-### OCI Requirements
+### IT Engineers
 
-* Compute instance with Cloud Agent enabled.
-* Load balancer (optional but recommended).
-* Monitoring and Dashboard permissions: `monitoring.*` and `dashboard.*`.
+* Identify manual infrastructure tasks that can be automated
+* Recognize patterns in repetitive operational work
+* Prioritize automation efforts based on impact
+* Design self-healing systems to reduce toil
 
-### Knowledge Requirements
+### Developers
 
-* Ability to query metrics in Metric Explorer.
-* Understanding of P95/P99 latency concepts.
+* Build automation for common operational tasks
+* Create tooling that prevents manual intervention
+* Design systems that require minimal manual maintenance
+* Write code that self-reports issues and suggests fixes
 
----
-
-## 4. Architecture / Diagram
+### Unified View
 
 ```
-             +-----------------------------+
-             |      OCI Custom Dashboard   |
-             +-----------------------------+
-             |  Latency (P95/P99)          |
-             |  Error Rate                 |
-             |  Healthy Backends           |
-             |  CPU / Memory / Network     |
-             |  Alarm States               |
-             +-----------------------------+
-```
-
----
-
-## 5. Step-by-Step Procedure
-
-## Step 1: Create a New Dashboard
-
-1. Open OCI Console.
-2. Navigate to:
-   **Observability & Management → Dashboards**.
-3. Click **Create Dashboard**.
-4. Provide:
-
-   * Name: `day2-reliability-dashboard`
-   * Description: `Dashboard for SLI/SLO reliability metrics`
-5. Select **Create**.
-
----
-
-## Step 2: Add a Latency Panel (Load Balancer)
-
-### For environments with an OCI Load Balancer:
-
-1. Click **Add Widget → Metric Chart**.
-2. Choose:
-
-   * Namespace: `oci_lbaas`
-   * Metric: `BackendResponseTime`
-3. Under **Statistic**, select: `p99`.
-4. Filter dimensions:
-
-   * `backendSetName`: your backend set
-   * `resourceId`: your load balancer OCID
-5. Title the panel: `P99 Backend Latency`.
-6. Click **Add to Dashboard**.
-
----
-
-## Step 3: Add CPU Utilization Panel
-
-1. Click **Add Widget → Metric Chart**.
-2. Select:
-
-   * Namespace: `oci_computeagent`
-   * Metric: `CpuUtilization`
-3. Filter by instance OCID.
-4. Choose statistic: `mean`.
-5. Title: `Compute CPU Utilization`.
-6. Add widget.
-
----
-
-## Step 4: Add Memory Utilization Panel
-
-1. Add another **Metric Chart**.
-2. Namespace: `oci_computeagent`
-3. Metric: `MemoryUtilization`.
-4. Filter by instance OCID.
-5. Title: `Memory Utilization`.
-
-### Notes
-
-Memory metrics require Cloud Agent.
-
----
-
-## Step 5: Add Error Rate Panel (Load Balancer)
-
-1. Add **Metric Chart**.
-2. Namespace: `oci_lbaas`.
-3. Metric: `HttpResponseCounts`.
-4. Filter dimensions:
-
-   * HTTP response class = `5xx`
-5. Choose statistic: `sum`.
-6. Title: `Error Rate (5xx Responses)`.
-
----
-
-## Step 6: Add Healthy Backend Count Panel
-
-1. Add **Metric Chart**.
-2. Namespace: `oci_lbaas`.
-3. Metric: `BackendHealthyHostCount`.
-4. Title: `Healthy Backend Hosts`.
-5. Use statistic: `mean`.
-
-### Why this matters
-
-This panel quickly identifies LB-side failures.
-
----
-
-## Step 7: Add Alarm Summary Widget
-
-1. Click **Add Widget → Alarm Status**.
-2. Select all relevant alarms:
-
-   * CPU alarms
-   * Latency alarms
-   * Availability alarms
-3. Title: `Active Alarms Overview`.
-
-### Purpose
-
-Provides quick visibility for on-call triage.
-
----
-
-## Step 8: Organize Dashboard Layout
-
-Arrange widgets in the following logical order:
-
-```
-Row 1: P99 Latency | Error Rate
-Row 2: Healthy Backends | Alarm Status
-Row 3: CPU Utilization | Memory Utilization | Network Traffic
-```
-
-Good dashboards follow the flow of the application:
-
-* User-facing metrics on top
-* Infrastructure metrics below
-* Alerts on the side or near the top
-
----
-
-## 6. Expected Output / Verification
-
-Your dashboard should now include:
-
-* A P99 latency chart
-* Error rate visualization
-* Backend health chart
-* CPU and memory charts
-* Alarm summary
-
-Verification checklist:
-
-```
-[ ] Dashboard created successfully
-[ ] Latency panel shows live data
-[ ] CPU and memory metrics visible
-[ ] Error panels show trend lines
-[ ] Healthy backend count displayed
-[ ] Alarms visible in summary widget
+Manual Work → Identify Toil → Prioritize → Automate → Focus on Engineering
 ```
 
 ---
 
-## 7. Troubleshooting Guidelines
+## 3. Key Concepts
 
-**No metrics visible:
+## 3.1 Characteristics of Toil
 
-* Check correct region and compartment.
-* Ensure Cloud Agent plugins are enabled on compute.
+Toil has specific characteristics:
 
-**Latency or error metrics missing:
+* **Repetitive** – Same task performed multiple times
+* **Manual** – Requires human intervention
+* **Automatable** – Can be done by scripts or systems
+* **Event-driven** – Triggered by incidents or alerts
+* **No long-term value** – Doesn't improve system design
 
-* Verify load balancer is receiving traffic.
+### Examples of Toil in BharatMart Operations:
 
-**Widget not saving:
-
-* Ensure dashboard name does not contain unsupported characters.
-* Refresh browser and retry.
-
-**Alarm widget empty:
-
-* Ensure alarms exist and are not disabled.
-
----
-
-## 8. Best Practices Learned
-
-* Group related metrics together.
-* Visualize percentiles for latency, not averages.
-* Include alarms to help on-call responders.
-* Use consistent time windows (e.g., last 1 hour).
-* Make dashboards service-centric, not resource-centric.
+* Restarting BharatMart API when CPU spikes occur
+* Manually checking logs for common error patterns
+* Updating inventory levels in database by hand during peak seasons
+* Responding to the same alert repeatedly without fixing root cause
+* Manually scaling instances during traffic spikes
 
 ---
 
-## 9. Additional Notes
+## 3.2 Toil vs. Engineering Work
 
-* Dashboards will be reused in Day 4 for high-availability and failover validation exercises.
-* Teams commonly create dashboards per microservice or per environment (dev, test, prod).
+#### Toil
+* Restarting services
+* Checking logs manually
+* Updating configurations by hand
+* Responding to repeated alerts
+
+#### Engineering Work
+* Designing automated scaling
+* Building monitoring dashboards
+* Creating self-healing systems
+* Fixing root causes of issues
+
+Key distinction: Engineering work creates long-term value; toil is temporary fixes.
+
+---
+
+## 3.3 Automation Prioritization
+
+Automation should be prioritized when a task is:
+
+* **Frequent** – Happens daily or weekly
+* **Time-consuming** – Takes significant engineering time
+* **Error-prone** – Manual execution leads to mistakes
+* **High-impact** – Failures cause significant issues
+
+Tasks that are rare or require deep human judgment are *not* good automation candidates.
+
+---
+
+## 4. Real-World Examples
+
+### Example 1 — Manual API Restarts in BharatMart
+
+#### Scenario
+
+BharatMart API instances experience CPU spikes during peak shopping hours, requiring manual restarts.
+
+* **Toil:** Engineer manually SSHes to instance and restarts API service
+* **Frequency:** Daily during peak traffic periods
+* **Time:** 5-10 minutes per incident
+* **Solution:** Automated health checks with auto-restart or auto-scaling configured
+* **Impact:** Frees up 30-60 minutes daily for engineering work
+
+---
+
+### Example 2 — Manual Log Checking for Errors
+
+#### Scenario
+
+SREs manually check BharatMart application logs for 500 errors multiple times per day.
+
+* **Toil:** Engineer runs grep commands or logs into OCI Logging Service to search for errors
+* **Frequency:** Multiple times per day during incidents
+* **Time:** 10-15 minutes per check
+* **Solution:** Automated alarms configured in OCI based on log patterns, alerts sent to on-call
+* **Impact:** Eliminates reactive log checking, enables proactive response
+
+---
+
+### Example 3 — Manual Inventory Updates
+
+#### Scenario
+
+Inventory levels need manual updates during peak shopping seasons for BharatMart.
+
+* **Toil:** Database administrator manually updates inventory quantities in database
+* **Frequency:** Weekly during peak shopping periods
+* **Time:** 30-60 minutes per update session
+* **Solution:** Automated inventory sync from external systems or API-driven updates
+* **Impact:** Reduces errors and frees up DBA time for optimization work
+
+---
+
+## 5. Case Study
+
+### Scenario: Reducing Toil in BharatMart Operations
+
+#### Problem
+
+BharatMart operations team spends significant time on manual tasks:
+
+* 2 hours/day manually checking logs for order placement errors
+* 1 hour/day restarting API instances during CPU spikes
+* 30 minutes/day manually updating configuration files
+* 45 minutes/day responding to repeated alerts for the same issues
+
+#### Total toil
+
+~4 hours/day = 20 hours/week = ~80 hours/month
+
+---
+
+### Analysis
+
+#### Toil Identification
+
+1. **Manual log checking** (High toil score: Time=3, Frequency=5, Score=15)
+   * Happens multiple times daily
+   * Repetitive pattern matching
+   * Automatable with log-based metrics and alarms
+
+2. **Manual API restarts** (High toil score: Time=2, Frequency=4, Score=8)
+   * Triggered by CPU spikes
+   * Should be automated with health checks and auto-scaling
+   * Root cause should be addressed
+
+3. **Manual configuration updates** (Medium toil score: Time=4, Frequency=2, Score=8)
+   * Infrequent but time-consuming
+   * Should use Infrastructure as Code (IaC)
+   * OCI Resource Manager or Terraform can automate
+
+4. **Repeated alert responses** (High toil score: Time=3, Frequency=5, Score=15)
+   * Same alerts firing repeatedly
+   * Root cause not being fixed
+   * Need better alert tuning and incident response
+
+---
+
+### Solution
+
+#### Automation Strategy
+
+1. **Automated Log Monitoring**
+   * Create logging-based metrics for error patterns
+   * Configure OCI alarms for order placement failures
+   * Set up dashboards for proactive monitoring
+
+2. **Automated Instance Management**
+   * Configure OCI auto-scaling for API instances
+   * Set up health checks with automatic recovery
+   * Implement instance pools for high availability
+
+3. **Infrastructure as Code**
+   * Use OCI Resource Manager for configuration management
+   * Automate deployment and configuration updates
+   * Version control for infrastructure changes
+
+4. **Alert Tuning**
+   * Fix root causes of repeated alerts
+   * Implement alert fatigue reduction strategies
+   * Create runbooks for common alert responses
+
+---
+
+### Result
+
+* **Toil Reduction:** 80 hours/month → 10 hours/month (87.5% reduction)
+* **Engineering Time:** Freed up 70 hours/month for reliability improvements
+* **System Reliability:** Improved through automation and root cause fixes
+* **Team Morale:** Reduced burnout from repetitive tasks
+
+---
+
+## 6. Hands-On Exercise (Summary Only)
+
+A complete hands-on lab will follow separately. It will include:
+
+* Identifying toil in BharatMart operations
+* Calculating toil scores based on time and frequency
+* Prioritizing automation opportunities
+* Designing automation solutions
+
+---
+
+## 7. Architecture / Workflow Diagrams
+
+### Diagram 1 — Toil Identification Process
+
+```
+Manual Task → Analyze Characteristics → Calculate Toil Score → Prioritize → Automate
+```
+
+### Diagram 2 — Toil Reduction Impact
+
+```
+Before: 80% Toil, 20% Engineering
+After:  20% Toil, 80% Engineering
+```
+
+### Diagram 3 — Automation Prioritization
+
+```
+High Frequency + High Time = Highest Priority
+Low Frequency + Low Time = Lowest Priority
+```
+
+---
+
+## 8. Best Practices
+
+* Regularly audit operational tasks for toil
+* Measure toil using time and frequency metrics
+* Prioritize automation based on toil scores
+* Fix root causes, don't just automate symptoms
+* Invest in Infrastructure as Code (IaC)
+* Build self-healing systems
+* Create runbooks for remaining manual tasks
+
+---
+
+## 9. Common Mistakes
+
+* Automating everything without prioritization
+* Not fixing root causes, just automating symptoms
+* Ignoring rare but critical manual tasks
+* Automating tasks that require human judgment
+* Not measuring toil reduction impact
+
+---
+
+## 10. Checklist
+
+* Understand what constitutes toil
+* Identify toil in day-to-day operations
+* Calculate toil scores for prioritization
+* Design automation solutions
+* Measure toil reduction impact
+
+---
+
+## 11. Additional Notes
+
+* Toil reduction is an iterative process
+* Start with highest toil score items
+* Measure success by engineering time freed up
+* Toil reduction directly impacts error budget management
+* This topic prepares you for automation topics in subsequent sessions

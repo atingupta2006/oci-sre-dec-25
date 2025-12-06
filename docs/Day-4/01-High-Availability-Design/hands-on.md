@@ -1,14 +1,14 @@
 
 # Hands-on Lab
 
-## **Student-Friendly Document with Complete Solution Key**
+#### Student-Friendly Document with Complete Solution Key
 
-This hands-on activity teaches students how to design and verify **High Availability (HA)** using OCI Load Balancer and multiple backend instance pools. Students deploy the **Class Enrollment Web App** behind a Load Balancer and validate traffic distribution.
+This hands-on activity teaches students how to design and verify **High Availability (HA)** using OCI Load Balancer and multiple backend instance pools. Students deploy the **BharatMart e-commerce platform** behind a Load Balancer and validate traffic distribution.
 
 
-## **1. Background Concepts (Clear, Practical Explanations)**
+#### 1. Background Concepts (Clear, Practical Explanations)
 
-## **1.1 Fault Domains & Redundancy**
+#### 1.1 Fault Domains & Redundancy
 
 OCI Availability Domains (ADs) contain **Fault Domains (FDs)**. A fault domain is an isolated group of hardware.
 
@@ -17,10 +17,10 @@ High availability requires:
 * Deploying instances across **multiple FDs**
 * Ensuring that if one FD fails, the service remains up
 
-In this lab, you will deploy **two compute instances** in different fault domains to host identical versions of the Class Enrollment App.
+In this lab, you will deploy **two compute instances** in different fault domains to host identical versions of the BharatMart application.
 
 
-## **1.2 Load Balancing Patterns**
+#### 1.2 Load Balancing Patterns
 
 Load balancers improve HA by:
 
@@ -33,7 +33,7 @@ Recommended pattern:
 * **Public Load Balancer → Backend Set → Instance Pool with multiple instances**
 
 
-## **1.3 Stateless Design Principles**
+#### 1.3 Stateless Design Principles
 
 Stateless applications:
 
@@ -41,18 +41,19 @@ Stateless applications:
 * Use external shared systems (DB, cache, object storage)
 * Allow easy scaling and failover
 
-The Class Enrollment App (Flask + React + SQLite or DB) can be treated as stateless if:
+The BharatMart e-commerce platform can be treated as stateless if:
 
 * Sessions are stored in cookies or DB
 * Compute node does not store critical state
 
 
-## **2. Hands-On Task 1 — Deploy App Behind OCI Load Balancer**
+## 2. Hands-On Task 1 — Deploy App Behind OCI Load Balancer
 
-## **Purpose:** Place your application behind a public Load Balancer for HA.
+#### Purpose
 
+Place your application behind a public Load Balancer for HA.
 
-## **Steps:**
+#### Steps
 
 1. Open **Navigation Menu (☰) → Networking → Load Balancers**.
 2. Click **Create Load Balancer**.
@@ -68,21 +69,22 @@ The Class Enrollment App (Flask + React + SQLite or DB) can be treated as statel
 5. Click **Next**.
 
 
-## **Frontend Listener Configuration:**
+#### Frontend Listener Configuration
 
 * **Listener Name:** `http-listener`
 * **Protocol:** HTTP
 * **Port:** `80`
 
 
-## **Expected Result:**
+#### Expected Result
 
 A public load balancer is created and ready for backend attachment.
 
+## 3. Hands-On Task 2 — Configure Two Backend Instance Pools
 
-## **3. Hands-On Task 2 — Configure Two Backend Instance Pools**
+#### Purpose
 
-## **Purpose:** Provide redundancy through multiple application servers.
+Provide redundancy through multiple application servers.
 
 ### You will:
 
@@ -91,9 +93,9 @@ A public load balancer is created and ready for backend attachment.
 * Register them with the Load Balancer backend set
 
 
-## **Steps:**
+#### Steps
 
-### **A. Create Instance Configuration**
+#### A. Create Instance Configuration
 
 Used by both instance pools.
 
@@ -108,9 +110,9 @@ Used by both instance pools.
 5. Save configuration.
 
 
-### **B. Create Two Instance Pools**
+#### B. Create Two Instance Pools
 
-#### **Pool 1:**
+#### Pool 1
 
 1. Go to **Compute → Instance Pools**.
 2. Click **Create Instance Pool**.
@@ -120,7 +122,7 @@ Used by both instance pools.
 6. Select **Fault Domain 1**
 7. Create.
 
-#### **Pool 2:**
+#### Pool 2
 
 Repeat with:
 
@@ -128,7 +130,7 @@ Repeat with:
 * Fault Domain: **FD 2**
 
 
-### **C. Register Pools as Backends**
+#### C. Register Pools as Backends
 
 1. Go back to your Load Balancer: `<student-id>-lb`
 2. Open **Backend Sets → Create Backend Set**
@@ -139,37 +141,29 @@ Repeat with:
 
    * `<student-id>-pool-a`
    * `<student-id>-pool-b`
-7. Port: `5000` (Flask default)
+7. Port: `3000` (BharatMart API default)
 8. Save.
 
 
-## **Expected Result:**
+#### Expected Result
 
 The load balancer shows **two healthy backends**, one in each fault domain.
 
+## 4. Hands-On Task 3 — Verify Traffic Distribution
 
-## **4. Hands-On Task 3 — Verify Traffic Distribution**
+#### Purpose
 
-## **Purpose:** Confirm that traffic load is balanced across both app servers.
+Confirm that traffic load is balanced across both app servers.
 
-
-## **Steps:**
+#### Steps
 
 1. Obtain the Load Balancer public IP.
 2. Access the app several times:
 
    * `http://<LB-IP>/`
-3. On each instance, edit the landing page to show instance ID:
-   Example in `app.py`:
-
-   ```python
-   import os
-   INSTANCE_ID = os.getenv('HOSTNAME', 'unknown')
-
-   @app.route('/')
-   def home():
-       return f"Served by instance: {INSTANCE_ID}"
-   ```
+3. Configure BharatMart application on each instance to show instance identification:
+   - Each instance should display a unique identifier (instance hostname or ID)
+   - This allows verification that traffic is being distributed across different instances
 4. Curl or refresh browser multiple times:
 
    ```bash
@@ -181,12 +175,11 @@ The load balancer shows **two healthy backends**, one in each fault domain.
    * `instance-pool-b-ID`
 
 
-## **Expected Result:**
+#### Expected Result
 
 Traffic alternates → confirming HA and load balancing functionality.
 
-
-## **5. Summary of the Hands-On**
+## 5. Summary of the Hands-On
 
 In this exercise, you:
 
@@ -198,12 +191,11 @@ In this exercise, you:
 These steps form the foundation of **High Availability architecture**.
 
 
-## **6. Solutions Key (Instructor Reference)**
+## 6. Solutions Key (Instructor Reference)
 
 Below is a validated reference solution.
 
-
-## **✔ Solution Key — Load Balancer**
+#### ✔ Solution Key — Load Balancer
 
 ### Expected:
 
@@ -214,7 +206,7 @@ Below is a validated reference solution.
 LB shows **Active** state.
 
 
-## **✔ Solution Key — Instance Pools**
+#### ✔ Solution Key — Instance Pools
 
 ### Expected:
 
@@ -226,7 +218,7 @@ Two pools:
 Each contains 1 instance created from the instance configuration.
 
 
-## **✔ Solution Key — Backend Set**
+#### ✔ Solution Key — Backend Set
 
 ### Expected:
 
@@ -237,7 +229,7 @@ Backend Set: `app-backend`
 * Both marked **Healthy**
 
 
-## **✔ Solution Key — Traffic Validation**
+#### ✔ Solution Key — Traffic Validation
 
 When refreshing:
 
@@ -247,4 +239,4 @@ When refreshing:
 If all responses come from one instance → health check misconfiguration.
 
 
-## **End of Hands-On Document**
+#### End of Hands-On Document

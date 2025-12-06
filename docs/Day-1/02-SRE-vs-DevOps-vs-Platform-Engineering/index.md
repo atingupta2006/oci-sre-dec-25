@@ -1,6 +1,6 @@
 # Day 1 – SRE Fundamentals and OCI Foundations
 
-## Subtopic: SRE vs DevOps vs Platform Engineering
+## Topic 2: SRE vs DevOps vs Platform Engineering
 
 ---
 
@@ -42,6 +42,15 @@ Platform Engineering: Provides internal tooling & reusable infrastructure
 SRE: Ensures reliability, observability, and operational excellence
 ```
 
+### BharatMart Example
+
+In the BharatMart platform, you can see these roles in action:
+
+* **Developer:** Writes React frontend code, Express.js API routes, database migrations
+* **DevOps:** Automates deployments to OCI Compute instances or OCI PaaS services
+* **Platform Engineering:** Provides reusable configuration templates and adapter patterns that allow switching databases (Supabase, OCI Autonomous), caches, and workers via environment variables
+* **SRE:** Monitors `/metrics` endpoint, sets up health checks, defines SLIs/SLOs, responds to incidents
+
 ---
 
 ## 3. Key Principles
@@ -81,31 +90,58 @@ SRE: Ensures reliability, observability, and operational excellence
 
 ## 4. Real-World Examples
 
-### Example 1 — Deployment Failure
+### Example 1 — Deployment Failure in BharatMart
 
-* Developers push a new version.
-* DevOps pipeline deploys it.
-* Application becomes slow.
-* SRE investigates latency spikes and error rates.
-* Platform Engineering later provides a safer deployment pattern using canary modules.
+#### Scenario
 
-### Example 2 — Scalability Requirements
+A new version of BharatMart is deployed, but the application becomes slow after deployment.
 
-* IT engineers notice traffic spikes on weekends.
-* SRE analyses saturation metrics and error budgets.
-* Platform Engineering introduces an autoscaling Terraform module.
-* DevOps updates pipelines to use the new module.
+#### How Each Role Responds
+
+* **Developers:** Push new version with new features.
+* **DevOps:** Deploy to OCI Compute instances or OCI PaaS services using automated deployment processes
+* **SRE:** Investigates latency spikes and error rates using:
+  - Metrics endpoint: `/metrics` - Checking `http_request_duration_seconds`
+  - Health endpoint: `/api/health` - Verifying service status
+  - Logs: `logs/api.log` - Finding error patterns
+* **Platform Engineering:** Provides reusable deployment templates and configuration patterns that include health checks by default.
+
+#### BharatMart Implementation
+- **DevOps:** Automated OCI deployments to single-VM or OCI PaaS
+- **SRE:** Health checks endpoint (`/api/health`) used by OCI monitoring and deployment validation
+- **Platform:** Reusable configuration templates for different deployment scenarios (single-VM, OCI PaaS)
+
+### Example 2 — Scalability Requirements in BharatMart
+
+#### Scenario
+
+Traffic spikes occur during peak shopping periods, requiring system scaling.
+
+#### How Each Role Responds
+
+* **IT Engineers:** Notice traffic spikes and resource usage increases.
+* **SRE:** Analyzes saturation metrics (CPU, memory, request rates) and error budgets to determine scaling needs.
+* **Platform Engineering:** Provides flexible adapter pattern allowing easy switching:
+  - Database: Supabase → PostgreSQL → OCI Autonomous
+  - Cache: Memory → Redis → OCI Cache
+  - Workers: In-process → Bull Queue → OCI Queue
+* **DevOps:** Updates deployment configuration to use new adapters via environment variables.
+
+#### BharatMart Implementation
+- **Platform:** Adapter pattern that switches infrastructure via `DATABASE_TYPE`, `CACHE_TYPE`, `WORKER_MODE` environment variables
+- **SRE:** Monitors metrics to determine when scaling is needed
+- **DevOps:** Simple configuration change: `CACHE_TYPE=redis` switches from memory to Redis cache
 
 ---
 
-## 5. Case Study
+## 5. Case Study: BharatMart Deployment Improvement
 
 ### Scenario: Unreliable Release Process Causing Frequent Outages
 
 ### Architecture Overview
 
 ```
-Developers → DevOps Pipelines → Application Deployment → Application Instances
+Developers → DevOps Pipelines → BharatMart Deployment → Application Instances
                                                 |                |
                                                 v                v
                                        Platform Tools      SRE Monitoring
@@ -113,22 +149,62 @@ Developers → DevOps Pipelines → Application Deployment → Application Insta
 
 ### Problem
 
-* Frequent outages after deployments.
-* CI/CD pipelines do not include automated health checks.
-* Developers rely on manual verification.
+* Frequent outages after deploying new BharatMart versions.
+* Manual deployments without automated health checks.
+* Developers rely on manual verification after each deployment.
 * No SLOs defined, leading to unclear reliability expectations.
+* Deployment failures detected only after users report issues.
 
 ### How Each Discipline Responds
 
-* **SRE:** Defines SLIs (availability, latency), sets SLO targets, adds health-based release gates.
-* **DevOps:** Updates CI/CD pipeline to include blue-green deployment with pre-traffic validation.
-* **Platform Engineering:** Creates reusable deployment templates with built-in health checks.
+#### SRE Actions
+
+* Defines SLIs: API availability, request latency, error rates
+* Sets SLO targets: 99.5% availability, P95 latency < 500ms
+* Adds health-based release gates using `/api/health` endpoint
+* Monitors metrics at `/metrics` endpoint for deployment validation
+
+#### DevOps Actions
+
+* Creates automated deployment processes for OCI deployments
+* Configures deployment to OCI Compute instances or OCI PaaS services
+* Uses configuration templates for standardized deployments
+* Adds deployment validation steps using health checks
+
+#### Platform Engineering Actions
+
+* Creates reusable deployment templates:
+  - Configuration templates for different scenarios (single-VM, OCI PaaS)
+  - OCI deployment configurations
+  - Environment variable templates for different deployment modes
+* Standardizes health check endpoints across all deployments
+* Provides adapter pattern for flexible infrastructure switching (OCI Autonomous Database, OCI Cache, etc.)
+
+### BharatMart Implementation
+
+#### Health Checks (SRE + Platform)
+
+- Health endpoint: `GET /api/health` - Returns service status
+- Used by SRE for monitoring via OCI Monitoring Service
+- Used by DevOps for deployment validation before marking deployment successful
+
+#### Deployment Automation (DevOps)
+
+- Automated OCI deployments for backend and frontend
+- Single-VM deployment configurations
+- OCI PaaS deployment configurations for OCI services integration
+
+#### Reusable Configuration (Platform)
+
+- Configuration templates for different deployment scenarios (single-VM, OCI PaaS, multi-tier)
+- Environment-based switching: `DEPLOYMENT_MODE`, `DATABASE_TYPE` (Supabase, OCI Autonomous), etc.
 
 ### Result
 
-* Deployment failures reduced significantly.
-* Release confidence improved.
-* Reliability became a shared responsibility.
+* Deployment failures reduced significantly through automated health checks
+* Release confidence improved with pre-deployment validation
+* Reliability became a shared responsibility across teams
+* Faster deployments with standardized, reusable templates
 
 ---
 

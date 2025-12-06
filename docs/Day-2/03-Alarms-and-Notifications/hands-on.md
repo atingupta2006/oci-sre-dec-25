@@ -1,10 +1,10 @@
 
-## Hands-on Lab
 
-* Create an **alarm** for CPU usage on the Compute instance running the Class Enrollment App
+
+* Create an **alarm** for CPU usage on the Compute instance running the BharatMart application
 * Configure an **email notification channel** so alarms can send alerts
 
-This mirrors real SRE workflows where alerts detect unhealthy system behavior (e.g., CPU spikes from enrollment bursts).
+This mirrors real SRE workflows where alerts detect unhealthy system behavior (e.g., CPU spikes from peak shopping traffic on BharatMart).
 
 
 ## 1. Objective of This Hands-On
@@ -22,9 +22,11 @@ This prepares learners for SLO-based alerting and incident response in later ses
 
 ## 2. Task 1 — Create an Alarm for CPU Usage
 
-## **Purpose:** Monitor CPU load of the Compute instance running the Class Enrollment app.
+#### Purpose
 
-This ensures you are alerted when the application becomes overloaded due to high student activity.
+Monitor CPU load of the Compute instance running the BharatMart application.
+
+This ensures you are alerted when the BharatMart API becomes overloaded due to high traffic during peak shopping hours.
 
 
 ## Steps:
@@ -63,7 +65,9 @@ Once CPU exceeds 70% for 1 minute, the alarm will enter **`FIRING`** state.
 
 ## 3. Task 2 — Add an Email Notification Channel
 
-## **Purpose:** Set up a path for alerts to reach you.
+#### Purpose
+
+Set up a path for alerts to reach you.
 
 Notifications in OCI use the **Notifications Service**, which relies on **Topics** and **Subscriptions**.
 
@@ -121,7 +125,7 @@ If CPU crosses 70%, you will receive an email alert.
 
 In this lab you learned how to:
 
-* Monitor the Compute VM hosting the Class Enrollment Application
+* Monitor the Compute VM hosting the BharatMart Application
 * Create a CPU alarm using default OCI metrics
 * Configure an email notification channel via Topics and Subscriptions
 * Attach notifications to the alarm

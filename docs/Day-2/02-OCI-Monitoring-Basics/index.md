@@ -1,10 +1,29 @@
 # Day 2 – Measuring Reliability and Monitoring on OCI
 
-## Subtopic: OCI Monitoring Basics
+## Topic 2: OCI Monitoring Basics
 
-### TOC Reference: Day 2 → Measuring Reliability and Monitoring on OCI → OCI Monitoring Basics
+
 
 ### Audience Context: IT Engineers and Developers
+
+---
+
+## 0. Deployment Assumptions
+
+For this topic, we assume that **BharatMart e-commerce platform** is already deployed on OCI with the following architecture:
+
+#### Assumed Deployment
+* **BharatMart API** running on one or more OCI Compute instances
+* **OCI Load Balancer** distributing traffic to API instances
+* **Database** (OCI Autonomous Database or Supabase) for data storage
+* **OCI Cloud Agent** enabled on Compute instances for metric collection
+
+#### Available Metrics
+* OCI default metrics from Compute instances (CPU, memory, network, disk)
+* Load Balancer metrics (backend health, latency, request counts)
+* Application metrics from BharatMart `/metrics` endpoint (Prometheus format) - if integrated with OCI Monitoring
+
+This deployment setup ensures that all metrics discussed in this topic are available for monitoring and analysis.
 
 ---
 
@@ -151,36 +170,39 @@ IT engineers monitor CPUUtilization to identify application overload patterns.
 
 SRE monitors BackendResponseTime for SLO compliance.
 
-### Example 3 — Payment API Custom Metric
+### Example 3 — BharatMart Payment API Custom Metric
 
-Developers send a custom metric:
+Developers send a custom metric for BharatMart payment processing:
 
 ```
-custom.myapp.payment.failureRate
+custom.bharatmart.payment.failureRate
 ```
 
-Used to track reliability of external dependency.
+Used to track reliability of external payment gateway dependency, complementing the `/metrics` endpoint which provides standard HTTP metrics.
 
 ---
 
 ## 5. Case Study
 
-### Scenario: Slowdown Reported in Production
+### Scenario: BharatMart Slowdown Reported in Production
 
-Users report slow responses during peak traffic.
+#### Problem
 
-### Investigation
+Users report slow responses during peak shopping hours on BharatMart platform.
 
-1. SRE opens Metric Explorer.
-2. Queries LB metrics → high BackendResponseTime.
-3. Queries compute metrics → CPUUtilization spikes.
-4. Developers review logs → long DB wait times.
+#### Investigation
 
-### Result
+1. SRE opens OCI Metric Explorer.
+2. Queries OCI Load Balancer metrics → high BackendResponseTime for BharatMart API backends.
+3. Queries compute metrics → CPUUtilization spikes on API instances during peak traffic.
+4. Developers review application logs → long database wait times for order queries.
+5. Cross-reference with BharatMart `/metrics` endpoint → P99 latency exceeds SLO threshold.
 
-* Compute shape upgraded.
-* DB query optimized.
-* SLO now stable.
+**Result:**
+
+* Compute shape upgraded for BharatMart API instances.
+* Database query optimized (OCI Autonomous Database or Supabase).
+* SLO now stable, validated via `/metrics` endpoint.
 
 ---
 

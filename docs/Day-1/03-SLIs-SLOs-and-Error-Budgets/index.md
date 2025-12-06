@@ -1,6 +1,6 @@
 # Day 1 – SRE Fundamentals and OCI Foundations
 
-## Subtopic: SLIs, SLOs, and Error Budgets
+## Topic 3: SLIs, SLOs, and Error Budgets
 
 ---
 
@@ -91,57 +91,89 @@ Engineering Decisions (Release / Stabilise)
 
 ## 4. Real-World Examples
 
-### Example 1 — API Latency SLO
+### Example 1 — API Latency SLO in BharatMart
 
-* SLIs show P99 latency climbing during peak hours.
-* SLO requires P99 < 500ms.
-* Developers identify inefficient DB query.
-* IT engineers validate scalability improvements.
+#### Scenario
 
-### Example 2 — OCI Load Balancer Backend Health (OCI Specific)
+API latency degrades during peak shopping hours.
 
-* SLI: `BackendHealthyHostCount` and response time.
-* SLO: "99.95% of traffic served by healthy hosts."
-* Issue: A backend VM becomes unhealthy under load.
-* Error budget consumed rapidly.
-* SRE initiates incident analysis and triggers autoscaling improvements.
+#### How BharatMart Demonstrates This
+* **SLI:** Request latency measured at 99th percentile from `/metrics` endpoint
+* **Metrics Available:** `http_request_duration_seconds` histogram tracks all request latencies
+* **SLO Target:** P99 latency < 500ms
+* **Detection:** Monitoring metrics endpoint shows P99 latency climbing from 200ms to 1500ms
+* **Action:** Developers identify slow database query; IT engineers validate scalability improvements on OCI Compute
 
-### Example 3 — Deployment-Induced Errors
+#### Key Point
 
-* Deployment increases error rate from 0.1% → 5%.
-* SLO violation detected via SLIs.
-* Error budget exhausted.
-* Releases halted until root cause identified.
+Metrics exposed at `/metrics` endpoint provide the data needed to measure SLIs and validate SLO compliance.
+
+### Example 2 — OCI Compute Instance Health (OCI Specific)
+
+#### Scenario
+
+A backend VM running BharatMart becomes unhealthy under load.
+
+#### How This Demonstrates SLO Concepts
+* **SLI:** Health check endpoint `/api/health` response rate and response time
+* **SLO Target:** "99.95% of requests served by healthy instances"
+* **Issue:** OCI Compute instance becomes unresponsive under load, health checks fail
+* **Error Budget Impact:** Error budget consumed rapidly as requests fail
+* **SRE Response:** Monitors `/metrics` endpoint for error rates, uses `/api/health` for instance health validation
+* **Resolution:** IT engineers scale up instance or add additional instances on OCI
+
+#### Key Point
+
+Health check endpoints like `/api/health` are essential SLIs for availability, especially in OCI deployments.
+
+### Example 3 — Deployment-Induced Errors in BharatMart
+
+#### Scenario
+
+A new deployment increases API error rates significantly.
+
+#### How BharatMart Demonstrates This
+* **SLI:** Error rate measured from `/metrics` endpoint - `http_requests_total` with status_code labels
+* **Baseline:** Normal error rate ~0.1% (healthy operation)
+* **Post-Deployment:** Error rate jumps to 5% (detected via metrics)
+* **SLO Violation:** Error budget exhausted within hours
+* **Response:** Releases halted; team focuses on stability until root cause identified
+
+#### Key Point
+
+The `/metrics` endpoint provides real-time visibility into error rates, enabling rapid SLO violation detection.
 
 ---
 
-## 5. Case Study
+## 5. Case Study: BharatMart Order API Latency Degradation
 
-### Scenario: A Billing API Experiences Latency Degradation
+### Scenario: Order Processing API Experiences Latency Issues
 
 ```
-Users → LB → Billing API → Database
+Users → OCI Load Balancer → BharatMart API → Database (Supabase/OCI Autonomous)
 ```
 
 ### Problem
 
-* P99 latency jumps from 200ms → 1500ms.
-* SLI: Latency at 99th percentile.
-* SLO: P99 < 400ms.
-* Error budget is consumed within hours.
+* **SLI Measurement:** Request latency at 99th percentile from `/metrics` endpoint
+* **Latency Spike:** P99 latency jumps from 200ms → 1500ms
+* **SLO Target:** P99 < 400ms
+* **Impact:** Error budget consumed within hours
 
-### Investigation
+### Investigation Using BharatMart Observability
 
-* Developers identify slow database join.
-* IT engineers observe CPU saturation on DB host.
-* SRE correlates metrics with logs.
-* Platform team updates DB instance shape.
+* **SRE:** Checks `/metrics` endpoint to see `http_request_duration_seconds` histogram showing latency spike
+* **SRE:** Reviews logs for error patterns during high-latency period
+* **Developers:** Identify slow database query causing the latency
+* **IT Engineers:** Observe CPU saturation on database host (OCI Autonomous Database or Supabase)
+* **Platform Team:** Recommends database optimization or instance scaling
 
 ### Result
 
-* Latency restored.
-* Error budget stabilised.
-* Change management pipeline updated to include SLI checks.
+* Latency restored to within SLO target
+* Error budget stabilized
+* Health check endpoint (`/api/health`) now includes latency validation
+* Future deployments validated against SLI thresholds before release
 
 ---
 
@@ -208,6 +240,42 @@ API Errors → 5xx, timeouts
 LB Health → Unhealthy backend count
 Compute → CPU/Memory saturation
 ```
+
+## 6. Observing SLIs in BharatMart Platform
+
+### Available Metrics for SLI Definition
+
+BharatMart exposes metrics at the `/metrics` endpoint that can be used to define SLIs:
+
+#### Availability SLI
+
+- Metric: `http_requests_total` with status_code labels
+- Measure: Percentage of requests with 2xx/3xx status codes
+- Access: `curl http://localhost:3000/metrics | grep http_requests_total`
+
+#### Latency SLI
+
+- Metric: `http_request_duration_seconds` histogram
+- Measure: P95, P99 latencies from histogram buckets
+- Access: `curl http://localhost:3000/metrics | grep http_request_duration_seconds`
+
+#### Error Rate SLI
+
+- Metric: `http_requests_total{status_code=~"5.."}` 
+- Measure: Percentage of 5xx errors
+- Access: Check metrics endpoint for error counts
+
+#### Health SLI
+- Endpoint: `/api/health`
+- Measure: Availability based on health check responses
+- Access: `curl http://localhost:3000/api/health`
+
+### Key Takeaways
+
+* The `/metrics` endpoint provides all the data needed to measure SLIs
+* Health check endpoint (`/api/health`) is essential for availability SLIs
+* These metrics are automatically collected - no manual instrumentation needed
+* Metrics follow Prometheus format, standard for SRE monitoring
 
 ---
 

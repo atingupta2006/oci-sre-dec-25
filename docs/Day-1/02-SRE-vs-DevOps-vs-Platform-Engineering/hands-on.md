@@ -1,7 +1,4 @@
 
-## Hands-on Lab
-
-## Hands-On Exercise: Role Comparison (Structured, Teaching-Friendly Version)
 
 ## 1. Objective of This Exercise
 
@@ -85,9 +82,9 @@ DevOps focuses on improving software delivery speed, automation, and consistency
 
 ### Additional Recommended DevOps Tasks (with explanations)
 
-* **Implement containerization (Docker, OCI, etc.)** — Standardizes application packaging.
+* **Automate OCI deployments** — Uses OCI deployment scripts for consistent cloud deployments.
 * **Manage artifact repositories (e.g., OCIR)** — Ensures secure and consistent versioned releases.
-* **Create and maintain deployment pipelines for canary/blue-green releases** — Supports safe rollouts.
+* **Create and maintain deployment pipelines** — Supports safe rollouts to OCI Compute or OCI PaaS services.
 * **Integrate automated testing frameworks** — Ensures reliability of builds before deployment.
 * **Coordinate release processes with development and SRE teams** — Facilitates smooth production releases.
 
@@ -120,9 +117,9 @@ Platform Engineering builds the internal platforms that development, DevOps, and
 ### Additional Recommended Platform Engineering Tasks (with explanations)
 
 * **Design and maintain golden paths for developers** — Standard workflows accelerate team velocity.
-* **Build custom Kubernetes operators or internal controllers** — Enhances platform automation.
+* **Build reusable OCI deployment configurations** — Enhances platform automation and standardization.
 * **Integrate authentication, secrets management, and policy enforcement** — Ensures organization-wide security.
-* **Operate internal PaaS offerings (Kafka, Redis, DBaaS, etc.)** — Provides reliable shared services.
+* **Operate internal PaaS offerings or OCI services (OCI Autonomous Database, OCI Cache, etc.)** — Provides reliable shared services.
 * **Create and maintain service templates and scaffolding tools** — Standardizes service creation.
 
 ### Hints for Students to Add More Tasks
@@ -164,3 +161,71 @@ This table becomes a reference point in later modules on:
 * Each role has a different focus area, but all three aim to improve engineering productivity and system reliability.
 * You will see these boundaries again when we discuss on-call, SLIs/SLOs, and postmortems.
 
+---
+
+## 6. Optional: Identify Roles in BharatMart Platform (5 minutes)
+
+#### Purpose
+
+Understand how SRE, DevOps, and Platform Engineering responsibilities appear in the BharatMart platform.
+
+This exercise helps you recognize where each discipline's work is visible in a real application.
+
+### Step 1: Identify DevOps Work
+
+#### Look for
+
+Deployment automation and infrastructure configuration.
+
+#### In BharatMart
+- Automated deployment processes for OCI Compute instances or OCI PaaS services
+- Service configuration for single-VM deployments
+- Configuration templates for different deployment scenarios
+
+#### What this shows
+
+DevOps creates deployment automation to standardize and simplify deployments to OCI.
+
+### Step 2: Identify Platform Engineering Work
+
+#### Look for
+
+Reusable, standardized infrastructure configurations.
+
+#### In BharatMart
+- Reusable configuration templates for different scenarios
+- Adapter patterns that allow switching between different infrastructure options (Supabase, OCI Autonomous Database, etc.)
+- Environment-based configuration switching
+
+#### What this shows
+
+Platform Engineering provides reusable configurations that multiple teams can use, making it easy to switch between single-VM and OCI PaaS deployments.
+
+### Step 3: Identify SRE Work
+
+#### Look for
+
+Observability and reliability features.
+
+#### In BharatMart
+1. **Access the running application:**
+   - Metrics endpoint: `http://localhost:3000/metrics` - Shows Prometheus metrics
+   - Health endpoint: `http://localhost:3000/api/health` - Returns service health status
+
+2. **Check logs:**
+   - Structured JSON logs in log files
+   - Request/response logging with context
+
+#### What this shows
+
+SRE implements observability features (metrics, health checks, structured logging) that enable monitoring and incident response.
+
+### Key Takeaways
+
+* **DevOps work** = Deployment automation and infrastructure configuration
+* **Platform Engineering work** = Reusable configurations and infrastructure abstractions
+* **SRE work** = Observability endpoints and features visible through the application's API
+
+These represent the work products of each discipline that you can see in action with the BharatMart platform deployed on OCI.
+
+---

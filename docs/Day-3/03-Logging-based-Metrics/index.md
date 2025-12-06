@@ -1,10 +1,52 @@
 # Day 3 – Toil Reduction, Observability, and Automation
 
-## Subtopic: Logging-Based Metrics
+## Topic 3: Logging-Based Metrics
 
-### TOC Reference: Day 3 → Toil Reduction, Observability, and Automation → Logging-based Metrics
+
 
 ### Audience Context: IT Engineers and Developers
+
+---
+
+## 0. Deployment Assumptions
+
+For this topic, we assume that **BharatMart e-commerce platform** is already deployed on OCI with the following architecture:
+
+#### Assumed Deployment
+* **BharatMart API** running on one or more OCI Compute instances
+* **OCI Load Balancer** distributing traffic to API instances
+* **Database** (OCI Autonomous Database or Supabase) for data storage
+* **Application logs** being generated and sent to **OCI Logging Service** (Winston logger with JSON format)
+* Logs stored in OCI Log Group for centralized analysis
+
+#### Available Logs for Metric Extraction
+* **Application logs:** API request/response logs, error logs, business event logs (order creation, payment processing)
+* **System logs:** Compute instance system logs captured by OCI Cloud Agent
+* **Access logs:** HTTP access logs from Load Balancer (if configured)
+
+#### Log Format
+* Structured JSON format from BharatMart Winston logger
+* Contains fields like: timestamp, level, message, route, status_code, error details, business context, trace_id, span_id
+
+#### How to Deploy
+
+BharatMart infrastructure can be deployed using **OCI Resource Manager with Terraform**. A complete Terraform template is provided in `deployment/terraform/` that provisions the infrastructure.
+
+#### Deployment Steps
+1. Use Terraform template in `deployment/terraform/` to provision infrastructure (VCN, Compute instances, Load Balancer)
+2. Deploy BharatMart application on Compute instances (logs will be generated to `logs/api.log` by default)
+3. Configure OCI Cloud Agent to send logs to OCI Logging Service (see Day 2 Topic 3, Section 5.3 or Day 3 Topic 2, Section 7.2 for detailed steps)
+4. Create OCI Log Group and Log in OCI Console
+5. Configure Cloud Agent log source pointing to application log file
+
+#### Prerequisites for Log-Based Metrics
+* BharatMart application must be deployed and generating logs
+* Logs must be ingested into OCI Logging Service (via OCI Cloud Agent)
+* OCI Log Group and Log must be created
+
+For infrastructure deployment details, see `deployment/terraform/README.md`. For log ingestion configuration, see Day 2 Topic 3, Section 5.3 or Day 3 Topic 2, Section 7.2.
+
+This deployment setup ensures that logs are available in OCI Logging Service for creating logging-based metrics using OCI Logging Query Language (LQL).
 
 ---
 
@@ -93,15 +135,19 @@ After constructing a query, you create a metric from it:
 
 ## 4. Real-World Examples
 
-### Example 1 — API Error Count
+### Example 1 — BharatMart API Error Count
 
-Logs contain 5xx entries:
+#### Scenario
+
+Tracking order placement failures from application logs.
+
+BharatMart application logs contain 5xx error entries:
 
 ```
-2025-11-14 12:01:05 ERROR /checkout 502 Bad Gateway
+{"timestamp":"2025-11-14T12:01:05Z","level":"error","route":"/api/orders","status_code":502,"message":"Payment gateway timeout"}
 ```
 
-Logging-based metric counts occurrences per minute.
+Logging-based metric counts occurrences per minute, creating a metric that tracks order placement failures for SLO monitoring.
 
 ### Example 2 — Authentication Failures
 
@@ -111,40 +157,49 @@ Metric can track:
 * Failed logins per minute,
 * Trigger alerts for brute-force attempts.
 
-### Example 3 — Disk Warning Messages
+### Example 3 — BharatMart Database Connection Warnings
 
-System logs contain:
+#### Scenario
+
+Tracking database connection pool exhaustion from application logs.
+
+BharatMart application logs contain warning messages:
 
 ```
-WARNING: disk sda running out of space
+{"timestamp":"2025-11-14T12:01:05Z","level":"warn","message":"Database connection pool exhausted","service":"bharatmart-api"}
 ```
 
-Metric extracted to count warnings → alarm triggers before outage.
+Metric extracted to count warnings → alarm triggers before complete service degradation, allowing proactive scaling.
 
 ---
 
 ## 5. Case Study
 
-### Scenario: Error Spikes Causing SLO Violations
+### Scenario: BharatMart Order Placement Error Spikes Causing SLO Violations
 
-Checkout service logs produce entries:
+#### Problem
 
-```
-ERROR checkout_failed orderId=123 reason=timeout
+Order placement failures causing SLO violations during peak shopping hours.
+
+BharatMart application logs (JSON format) produce error entries:
+
+```json
+{"timestamp":"2025-11-14T12:01:05Z","level":"error","route":"/api/orders","status_code":500,"message":"Order creation failed","orderId":"123","reason":"database_timeout"}
 ```
 
 SRE creates a logging-based metric:
 
 ```
-filter logLevel = "ERROR" and message contains "checkout_failed"
+filter level = "error" and route = "/api/orders"
 | stats count() by bin(1m)
 ```
 
 ### Results
 
-* Error spikes visible on dashboards,
-* Alarm triggers when error rate exceeds threshold,
-* Faster detection reduces impact duration.
+* Error spikes visible on dashboards showing order placement failures over time,
+* Alarm triggers when error rate exceeds SLO threshold (e.g., > 1% failure rate),
+* Faster detection reduces impact duration and protects error budget,
+* Metric complements infrastructure metrics for complete observability.
 
 ---
 

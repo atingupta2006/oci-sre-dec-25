@@ -1,10 +1,46 @@
 # Day 3 – Toil Reduction, Observability, and Automation
 
-## Subtopic: Observability Principles
+## Topic 2: Observability Principles
 
-### TOC Reference: Day 3 → Toil Reduction, Observability, and Automation → Observability Principles
+
 
 ### Audience Context: IT Engineers and Developers
+
+---
+
+## 0. Deployment Assumptions
+
+For this topic, we assume that **BharatMart e-commerce platform** is already deployed on OCI with the following architecture:
+
+#### Assumed Deployment
+* **BharatMart API** running on one or more OCI Compute instances
+* **OCI Load Balancer** distributing traffic to API instances
+* **Database** (OCI Autonomous Database or Supabase) for data storage
+* **OCI Cloud Agent** enabled on Compute instances for metric collection
+* **BharatMart application** exposing Prometheus metrics at `/metrics` endpoint
+* **Application logs** being generated (Winston logger with JSON format)
+* **Optional tracing** configured (OpenTelemetry with OTLP exporter if enabled)
+
+#### Available Observability Data
+* **Metrics:** OCI infrastructure metrics, Load Balancer metrics, BharatMart Prometheus metrics from `/metrics` endpoint
+* **Logs:** Application logs (API requests, errors, business events), system logs from Compute instances
+* **Traces:** Distributed request tracing (if OpenTelemetry is configured and enabled)
+
+#### How to Deploy
+
+BharatMart infrastructure can be deployed using **OCI Resource Manager with Terraform**. A complete Terraform template is provided in `deployment/terraform/` that provisions the infrastructure components.
+
+#### Deployment Steps
+1. Use Terraform template in `deployment/terraform/` to provision infrastructure (VCN, Compute instances, Load Balancer)
+2. Deploy BharatMart application on Compute instances
+3. Configure OCI Cloud Agent on Compute instances (enabled by default on Oracle Linux images)
+4. Configure application environment variables (metrics endpoint enabled by default via `ENABLE_METRICS=true`)
+5. Configure log ingestion (see Section 7.2 for steps to send logs to OCI Logging)
+6. Configure metrics ingestion (see Section 7.1 for steps to send metrics to OCI Monitoring)
+
+For infrastructure deployment details, see `deployment/terraform/README.md`. For observability integration steps, see Sections 7.1 and 7.2 in this document.
+
+This deployment setup ensures that all three pillars of observability (metrics, logs, traces) are available for analysis and troubleshooting.
 
 ---
 
@@ -126,61 +162,209 @@ Traces reveal:
 
 ## 5. Real-World Examples
 
-### Example 1 — Slow API Response
+### Example 1 — BharatMart Slow API Response
 
-* Metrics show latency spike.
-* Logs show database timeouts.
-* Trace reveals slow downstream dependency.
+#### Scenario
 
-### Example 2 — OCI Compute CPU Saturation
+Order placement latency spikes during peak shopping hours.
 
-* Metric identifies high CPU.
-* Logs show a loop in application code.
-* Trace shows high load on specific endpoint.
+* **Metrics** from BharatMart `/metrics` endpoint show latency spike (P99 > 500ms).
+* **Logs** from application logs show database connection timeouts.
+* **Traces** reveal slow downstream dependency calls to payment gateway or database.
+* **Correlation:** All three signals together identify root cause during incident investigation.
 
-### Example 3 — Payment Gateway Failures
+### Example 2 — BharatMart API CPU Saturation on OCI Compute
 
-* Logs show recurring 502 errors.
-* Metrics show increase in 5xx count.
-* Traces pinpoint the retry storm.
+#### Scenario
+
+BharatMart API instances experiencing high CPU during traffic spikes.
+
+* **Metric** from OCI Monitoring identifies high CPU utilization (>85%) on Compute instances.
+* **Logs** from BharatMart application logs show inefficient loop in order processing code.
+* **Trace** shows high load concentrated on `/api/orders` endpoint during peak hours.
+* **Action:** SRE team uses all three signals to prioritize optimization efforts.
+
+### Example 3 — BharatMart Payment Gateway Failures
+
+#### Scenario
+
+External payment gateway experiencing intermittent failures.
+
+* **Logs** from BharatMart show recurring 502 errors when calling payment API.
+* **Metrics** from `/metrics` endpoint show increase in 5xx error count for payment-related routes.
+* **Traces** pinpoint retry storms causing cascading failures and increased latency.
+* **Resolution:** SRE team implements circuit breaker pattern using observability insights.
 
 ---
 
 ## 6. Case Study
 
-### Scenario: Checkout API slowdowns
+### Scenario: BharatMart Order API Slowdowns
 
-User journey:
+#### User Journey
 
 ```
-User → Load Balancer → API → Database → External Payment Service
+User → OCI Load Balancer → BharatMart Order API → Database (OCI Autonomous/Supabase) → External Payment Service
 ```
 
 ### Issue
 
-P99 latency > defined SLO.
+P99 latency from BharatMart `/metrics` endpoint exceeds defined SLO (< 500ms) during peak shopping hours.
 
 ### Observability Workflow
 
-1. **Metrics** show latency spike.
-2. **Logs** reveal database connection exhaustion.
-3. **Traces** show long-running calls to payment API.
+1. **Metrics** from `/metrics` endpoint show latency spike (P99 > 800ms).
+2. **Metrics** from OCI Load Balancer show increased BackendResponseTime.
+3. **Logs** from BharatMart application reveal database connection pool exhaustion errors.
+4. **Traces** (if enabled) show long-running calls to external payment API contributing to latency.
+5. **Correlation:** Metrics + logs + traces identify multiple contributing factors.
 
 ### Result
 
-* Developers fix DB connection pooling.
-* IT engineers optimize instance shape.
-* SRE updates SLO dashboard.
+* Developers fix database connection pooling configuration.
+* IT engineers optimize OCI Compute instance shape for better performance.
+* SRE updates SLO dashboard with improved thresholds based on observability insights.
+* Team implements better error handling for payment gateway timeouts.
 
 ---
 
-## 7. Hands-On Exercise (Summary Only)
+## 7. Practical Integration: Bringing BharatMart Observability Data into OCI
+
+### Overview
+
+BharatMart generates observability data (metrics, logs, traces), but to fully leverage OCI Observability services, you need to ingest this data. This section provides practical steps.
+
+### 7.1 Ingesting BharatMart Metrics into OCI Monitoring
+
+#### What BharatMart Provides
+
+BharatMart exposes Prometheus-format metrics at `/metrics` endpoint:
+- HTTP metrics (latency, counts, status codes)
+- Business metrics (orders, payments)
+- Error rates and success rates
+
+#### Integration Steps
+
+##### Step 1: Verify Metrics Endpoint
+```bash
+curl http://localhost:3000/metrics
+```
+
+##### Step 2: Configure OCI Cloud Agent
+
+The OCI Cloud Agent (unified monitoring agent) collects custom metrics from applications.
+
+1. **Verify Cloud Agent is installed on Compute instance:**
+   ```bash
+   systemctl status unified-monitoring-agent
+   ```
+
+2. **Configure custom metrics collection:**
+   Edit Cloud Agent configuration (typically `/opt/oracle-cloud-agent/plugins/monitoring/config.json`):
+
+   ```json
+   {
+     "customMetrics": [
+       {
+         "namespace": "custom.bharatmart",
+         "metricName": "http_requests_total",
+         "endpoint": "http://localhost:3000/metrics",
+         "scrapeInterval": 60
+       }
+     ]
+   }
+   ```
+
+3. **Restart Cloud Agent:**
+   ```bash
+   sudo systemctl restart unified-monitoring-agent
+   ```
+
+##### Step 3: Verify in OCI Monitoring
+
+1. Go to **OCI Console → Observability & Management → Monitoring → Metric Explorer**
+2. Select namespace: `custom.bharatmart`
+3. Verify metrics appear (e.g., `http_requests_total`, `http_request_duration_seconds`)
+
+#### Result
+
+BharatMart metrics are now available in OCI Monitoring for dashboards and alarms.
+
+### 7.2 Ingesting BharatMart Logs into OCI Logging
+
+#### What BharatMart Provides
+
+BharatMart generates structured JSON logs in `logs/api.log`:
+- API request/response logs with OpenTelemetry trace IDs
+- Business event logs (orders, payments)
+- Error logs with stack traces
+
+#### Integration Steps
+
+##### Step 1: Create OCI Log Group and Log
+
+1. Go to **OCI Console → Observability & Management → Logging → Log Groups**
+2. Click **Create Log Group** (name: `bharatmart-logs`)
+3. Create a **Log**:
+   - Name: `bharatmart-api-log`
+   - Log Type: Custom Log
+
+##### Step 2: Configure OCI Cloud Agent for Log Collection
+
+1. **Configure log source:**
+   Edit Cloud Agent logging configuration (typically `/opt/oracle-cloud-agent/plugins/logging/config.json`):
+
+   ```json
+   {
+     "logSources": [
+       {
+         "logId": "<LOG_OCID>",
+         "logPath": "/path/to/your/app/logs/api.log",
+         "logType": "custom",
+         "parser": "json"
+       }
+     ]
+   }
+   ```
+
+   Replace `<LOG_OCID>` with the OCID of the Log you created.
+
+2. **Restart Cloud Agent:**
+   ```bash
+   sudo systemctl restart unified-monitoring-agent
+   ```
+
+##### Step 3: Verify in OCI Logging
+
+1. Go to **OCI Console → Observability & Management → Logging → Log Explorer**
+2. Select Log Group: `bharatmart-logs`
+3. Select Log: `bharatmart-api-log`
+4. Verify log entries appear
+
+#### Result
+
+BharatMart logs are now in OCI Logging for analysis and log-based metrics.
+
+### 7.3 Benefits of Integration
+
+With metrics and logs ingested into OCI:
+
+1. **Unified Observability:** All telemetry data in one place (OCI Console)
+2. **Correlation:** Link infrastructure metrics (OCI) with application metrics (BharatMart)
+3. **Advanced Analysis:** Use OCI Logging Query Language (LQL) for log analysis
+4. **Integrated Alarms:** Create alarms on custom metrics and log-based metrics
+5. **Dashboards:** Combine infrastructure and application metrics in unified dashboards
+
+---
+
+## 8. Hands-On Exercise (Summary Only)
 
 A complete lab will follow separately. It will include:
 
 * Enabling system logs for Compute.
 * Viewing logs in Log Explorer.
-* Enabling application logs.
+* Configuring OCI Cloud Agent to ingest BharatMart logs.
+* Verifying custom metrics from BharatMart in OCI Monitoring.
 * Viewing sample traces (if tracing enabled).
 
 ---
